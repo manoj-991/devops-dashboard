@@ -1,373 +1,195 @@
-const cpuChart =
-    new Chart(
-        document.getElementById("cpuChart"),
-        {
-            type: "line",
+const cpuElement =
+    document.getElementById("cpu")
 
-            data: {
-                labels: [],
-                datasets: [{
-                    label: "CPU %",
-                    data: [],
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true
-                }]
-            }
-        }
-    )
+const ramElement =
+    document.getElementById("ram")
 
-const ramChart =
-    new Chart(
-        document.getElementById("ramChart"),
-        {
-            type: "line",
+const diskElement =
+    document.getElementById("disk")
 
-            data: {
-                labels: [],
-                datasets: [{
-                    label: "RAM %",
-                    data: [],
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true
-                }]
-            }
-        }
-    )
+const uptimeElement =
+    document.getElementById("uptime")
+
+const healthElement =
+    document.getElementById("health")
+
+let cpuChart
+let ramChart
 
 async function loadDashboard() {
-    const audit =
-        await fetch(
-            "/api/audit-logs"
-        )
-            .then(r => r.json())
-
-    document
-        .getElementById("auditLogs")
-        .innerText =
-        audit.logs || "No audit logs"
 
     try {
 
         // HEALTH
+
         const health =
             await fetch("/api/health")
                 .then(r => r.json())
 
-        document
-            .getElementById("health")
-            .innerText =
-            health.status || "Unknown"
-
-
-        // UPTIME
-        const uptime =
-            await fetch("/api/uptime")
-                .then(r => r.json())
-
-        document
-            .getElementById("uptime")
-            .innerText =
-            uptime.uptime || "N/A"
-
+        healthElement.innerText =
+            health.status || "Running"
 
         // CPU
+
         const cpu =
             await fetch("/api/cpu")
                 .then(r => r.json())
 
-        document
-            .getElementById("cpu")
-            .innerText =
-            cpu.cpu || "N/A"
+        cpuElement.innerText =
+            cpu.cpu
 
+        document.getElementById(
+            "cpuBar"
+        ).style.width =
+            cpu.cpu
 
         // RAM
+
         const ram =
             await fetch("/api/ram")
                 .then(r => r.json())
 
-        document
-            .getElementById("ram")
-            .innerText =
-            ram.ram || "N/A"
+        ramElement.innerText =
+            ram.ram
 
+        document.getElementById(
+            "ramBar"
+        ).style.width =
+            ram.ram
 
         // DISK
+
         const disk =
             await fetch("/api/disk")
                 .then(r => r.json())
 
-        document
-            .getElementById("disk")
-            .innerText =
-            disk.disk || "N/A"
+        diskElement.innerText =
+            disk.disk
 
+        document.getElementById(
+            "diskBar"
+        ).style.width =
+            disk.disk
 
-        // NETWORK
-        const network =
-            await fetch("/api/network")
+        // UPTIME
+
+        const uptime =
+            await fetch("/api/uptime")
                 .then(r => r.json())
 
-        document
-            .getElementById("network")
-            .innerHTML = `
+        uptimeElement.innerText =
+            uptime.uptime
 
-        Upload:
-        ${(network.bytes_sent / 1024 / 1024)
-                .toFixed(2)} MB
+        // DOCKER CONTAINERS
 
-        <br><br>
-
-        Download:
-        ${(network.bytes_received / 1024 / 1024)
-                .toFixed(2)} MB
-        `
-
-
-        // SYSTEM
-        const system =
-            await fetch("/api/system")
-                .then(r => r.json())
-
-        document
-            .getElementById("system")
-            .innerHTML = `
-
-        OS:
-        ${system.os}
-
-        <br><br>
-
-        Platform:
-        ${system.platform}
-
-        <br><br>
-
-        Host:
-        ${system.hostname}
-        `
-
-
-        // SERVICES
-        const services =
-            await fetch("/api/services")
-                .then(r => r.json())
-
-        let servicesHTML = ""
-
-        if (Array.isArray(services)) {
-
-            services.forEach(service => {
-
-                servicesHTML += `
-
-                <div
-                style="
-                margin-bottom:10px;
-                ">
-
-                    <span class="
-                    status-running
-                    ">
-                    ●
-                    </span>
-
-                    ${service.name}
-
-                </div>
-                `
-            })
-        }
-
-        document
-            .getElementById("services")
-            .innerHTML =
-            servicesHTML
-
-
-        // PORTS
-        const ports =
-            await fetch("/api/ports")
-                .then(r => r.json())
-
-        let portsHTML = ""
-
-        if (Array.isArray(ports.ports)) {
-
-            ports.ports
-                .slice(0, 8)
-                .forEach(port => {
-
-                    portsHTML += `
-
-                <div
-                style="
-                margin-bottom:8px;
-                ">
-
-                    ${port}
-
-                </div>
-                `
-                })
-        }
-
-        document
-            .getElementById("ports")
-            .innerHTML =
-            portsHTML
-
-
-        // LAST UPDATED
-        document
-            .getElementById("lastUpdated")
-            .innerText =
-            new Date()
-                .toLocaleTimeString()
-
-
-        // PROCESSES
-        const processes =
-            await fetch("/api/processes")
-                .then(r => r.json())
-
-        let processHTML = ""
-
-        if (Array.isArray(processes)) {
-
-            processes.forEach(process => {
-
-                processHTML += `
-
-                <div
-                style="
-                margin-bottom:12px;
-                ">
-
-                    <strong>
-                    ${process.name}
-                    </strong>
-
-                    <br>
-
-                    CPU:
-                    ${process.cpu.toFixed(2)}%
-
-                </div>
-                `
-            })
-        }
-
-        document
-            .getElementById("processes")
-            .innerHTML =
-            processHTML
-
-
-        // DOCKER
-        const containers =
+        const docker =
             await fetch("/api/docker")
                 .then(r => r.json())
 
         let dockerHTML = ""
 
-        if (Array.isArray(containers)) {
+        if (Array.isArray(docker)) {
 
-            containers.forEach(container => {
+            docker.forEach(container => {
+
+                const statusClass =
+                    container.state === "running"
+                        ? "running-badge"
+                        : "stopped-badge"
+
+                const actionButton =
+                    container.state === "running"
+                        ? `
+        <button
+        class="action-btn stop-btn">
+
+            Stop
+
+        </button>
+        `
+                        : `
+        <button
+        class="action-btn start-btn">
+
+            Start
+
+        </button>
+        `
 
                 dockerHTML += `
+        <tr>
 
-                <div class="container-item">
+            <td>
 
-                    <strong>
+                <div class="docker-name">
+
                     ${container.name}
-                    </strong>
 
-                    <br><br>
+                </div>
 
-                    Image:
+                <div class="docker-sub">
+
                     ${container.image}
 
-                    <br><br>
+                </div>
 
-                    State:
+            </td>
 
-                    <span class="
-                    ${container.state === "running"
-                        ? "status-running"
-                        : "status-exited"}
-                    ">
+            <td>
+
+                <span class="${statusClass}">
 
                     ${container.state}
 
-                    </span>
+                </span>
 
-                    <br><br>
+            </td>
 
-                    Status:
-                    ${container.status}
+            <td>
 
-                    <div class="btn-group">
+                <div class="port-badge">
 
-                        <button
-                        class="logs-btn"
-                        onclick="
-                        showContainerLogs(
-                        '${container.name}'
-                        )
-                        ">
-                            Logs
-                        </button>
-
-                        <button
-                        class="start-btn"
-                        onclick="
-                        containerAction(
-                        'start',
-                        '${container.name}'
-                        )
-                        ">
-                            Start
-                        </button>
-
-                        <button
-                        class="stop-btn"
-                        onclick="
-                        containerAction(
-                        'stop',
-                        '${container.name}'
-                        )
-                        ">
-                            Stop
-                        </button>
-
-                        <button
-                        class="restart-btn"
-                        onclick="
-                        containerAction(
-                        'restart',
-                        '${container.name}'
-                        )
-                        ">
-                            Restart
-                        </button>
-
-                    </div>
+                    8080/tcp
 
                 </div>
-                `
+
+            </td>
+
+            <td>
+
+                <div class="docker-actions">
+
+                    ${actionButton}
+
+                    <button
+                    class="action-btn restart-btn">
+
+                        Restart
+
+                    </button>
+
+                    <button
+                    class="action-btn logs-btn">
+
+                        Logs
+
+                    </button>
+
+                </div>
+
+            </td>
+
+        </tr>
+        `
             })
         }
 
-        document
-            .getElementById("docker")
-            .innerHTML =
+        document.getElementById(
+            "docker"
+        ).innerHTML =
             dockerHTML
-
-
         // CONTAINER STATS
+
         const stats =
             await fetch("/api/container-stats")
                 .then(r => r.json())
@@ -379,158 +201,317 @@ async function loadDashboard() {
             stats.forEach(stat => {
 
                 statsHTML += `
+        <tr>
 
-                <div
-                style="
-                margin-bottom:14px;
-                ">
+            <td>
+                ${stat.name}
+            </td>
 
-                    <strong>
-                    ${stat.name}
-                    </strong>
+            <td>
 
-                    <br>
+                <div class="mini-bar-bg">
 
-                    CPU:
-                    ${stat.cpu}
+                    <div
+                    class="mini-bar cpu-mini"
+                    style="
+                    width:${stat.cpu};
+                    ">
 
-                    <br>
+                    </div>
 
-                    Memory:
-                    ${stat.memory}
+                </div>
 
+                ${stat.cpu}
+
+            </td>
+
+            <td>
+
+                ${stat.memory}
+
+            </td>
+
+        </tr>
+        `
+            })
+        }
+
+        document.getElementById(
+            "containerStats"
+        ).innerHTML =
+            statsHTML
+
+        // PROCESSES
+
+        const processes =
+            await fetch("/api/processes")
+                .then(r => r.json())
+
+        let processHTML = `
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>CPU</th>
+            </tr>
+        `
+
+        if (Array.isArray(processes)) {
+
+            processes.forEach(p => {
+
+                processHTML += `
+                <tr>
+                    <td>${p.name}</td>
+                    <td>${p.cpu}</td>
+                </tr>
+                `
+            })
+        }
+
+        processHTML += `</table>`
+
+        document.getElementById(
+            "processes"
+        ).innerHTML =
+            processHTML
+
+        // NETWORK
+
+        const network =
+            await fetch("/api/network")
+                .then(r => r.json())
+
+        document.getElementById(
+            "network"
+        ).innerHTML = `
+        <div>
+            Upload:
+            ${network.upload || "N/A"}
+        </div>
+
+        <div>
+            Download:
+            ${network.download || "N/A"}
+        </div>
+        `
+
+        // PORTS
+
+        try {
+
+            const portsResponse =
+                await fetch("/api/ports")
+
+            const portsData =
+                await portsResponse.json()
+
+            let portsArray = []
+
+            if (Array.isArray(portsData)) {
+
+                portsArray = portsData
+
+            } else if (
+                Array.isArray(
+                    portsData.ports
+                )
+            ) {
+
+                portsArray =
+                    portsData.ports
+            }
+
+            let portsHTML = `
+            <table>
+                <tr>
+                    <th>PORTS</th>
+                </tr>
+            `
+
+            portsArray.forEach(port => {
+
+                portsHTML += `
+                <tr>
+                    <td>${port}</td>
+                </tr>
+                `
+            })
+
+            portsHTML += `
+            </table>
+            `
+
+            document.getElementById(
+                "ports"
+            ).innerHTML =
+                portsHTML
+
+        } catch (err) {
+
+            document.getElementById(
+                "ports"
+            ).innerHTML =
+                "Failed to load ports"
+        }
+
+        // SYSTEM
+
+        const system =
+            await fetch("/api/system")
+                .then(r => r.json())
+
+        document.getElementById(
+            "system"
+        ).innerHTML = `
+        <div>
+            OS:
+            ${system.os}
+        </div>
+
+        <div>
+            Platform:
+            ${system.platform}
+        </div>
+
+        <div>
+            Host:
+            ${system.hostname}
+        </div>
+        `
+
+        // SERVICES
+
+        const services =
+            await fetch("/api/services")
+                .then(r => r.json())
+
+        let servicesHTML = ""
+
+        if (Array.isArray(services)) {
+
+            services.forEach(service => {
+
+                servicesHTML += `
+                <div>
+                    • ${service}
                 </div>
                 `
             })
         }
 
-        document
-            .getElementById("containerStats")
-            .innerHTML =
-            statsHTML
-
+        document.getElementById(
+            "services"
+        ).innerHTML =
+            servicesHTML
 
         // LOGS
+
         const logs =
             await fetch("/api/logs")
                 .then(r => r.json())
 
-        document
-            .getElementById("logs")
-            .innerText =
+        document.getElementById(
+            "logs"
+        ).innerText =
             logs.logs || "No logs"
 
+        // AUDIT LOGS
+
+        const audit =
+            await fetch("/api/audit-logs")
+                .then(r => r.json())
+
+        document.getElementById(
+            "auditLogs"
+        ).innerText =
+            audit.logs || "No audit logs"
 
         // CPU HISTORY
+
         const cpuHistory =
             await fetch("/api/cpu-history")
                 .then(r => r.json())
 
-        if (Array.isArray(cpuHistory)) {
+        const cpuLabels =
+            cpuHistory.map(x => x.time)
 
-            cpuChart.data.labels =
-                cpuHistory.map(
-                    point => point.time
-                )
+        const cpuValues =
+            cpuHistory.map(x => x.value)
 
-            cpuChart.data.datasets[0].data =
-                cpuHistory.map(
-                    point => point.value
-                )
+        if (cpuChart) {
 
-            cpuChart.update()
+            cpuChart.destroy()
         }
 
+        cpuChart =
+            new Chart(
+                document.getElementById(
+                    "cpuChart"
+                ),
+                {
+                    type: "line",
+
+                    data: {
+                        labels: cpuLabels,
+
+                        datasets: [{
+                            label: "CPU %",
+                            data: cpuValues,
+                            borderColor: "#3b82f6",
+                            backgroundColor:
+                                "rgba(59,130,246,0.2)",
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    }
+                }
+            )
 
         // RAM HISTORY
+
         const ramHistory =
             await fetch("/api/ram-history")
                 .then(r => r.json())
 
-        if (Array.isArray(ramHistory)) {
+        const ramLabels =
+            ramHistory.map(x => x.time)
 
-            ramChart.data.labels =
-                ramHistory.map(
-                    point => point.time
-                )
+        const ramValues =
+            ramHistory.map(x => x.value)
 
-            ramChart.data.datasets[0].data =
-                ramHistory.map(
-                    point => point.value
-                )
+        if (ramChart) {
 
-            ramChart.update()
+            ramChart.destroy()
         }
 
+        ramChart =
+            new Chart(
+                document.getElementById(
+                    "ramChart"
+                ),
+                {
+                    type: "line",
 
-        // ALERTS
-        const alerts =
-            document
-                .getElementById("alerts")
+                    data: {
+                        labels: ramLabels,
 
-        alerts.innerHTML = ""
-
-        const ramValue =
-            parseFloat(ram.ram)
-
-        if (ramValue > 80) {
-
-            alerts.innerHTML += `
-
-            <div class="alert-box">
-
-                HIGH RAM USAGE
-
-            </div>
-            `
-        }
+                        datasets: [{
+                            label: "RAM %",
+                            data: ramValues,
+                            borderColor: "#a855f7",
+                            backgroundColor:
+                                "rgba(168,85,247,0.2)",
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    }
+                }
+            )
 
     } catch (error) {
 
         console.log(error)
     }
-}
-
-async function showContainerLogs(name) {
-
-    const data =
-        await fetch(
-            `/api/container-logs/${name}`
-        )
-            .then(r => r.json())
-
-    document
-        .getElementById("logModal")
-        .style.display =
-        "flex"
-
-    document
-        .getElementById("modalLogs")
-        .innerText =
-        data.logs || "No logs"
-}
-
-function closeModal() {
-
-    document
-        .getElementById("logModal")
-        .style.display =
-        "none"
-}
-
-async function containerAction(
-    action,
-    name
-) {
-
-    await fetch(
-        `/api/container-${action}/${name}`,
-        {
-            method: "POST"
-        }
-    )
-
-    loadDashboard()
 }
 
 loadDashboard()
@@ -539,3 +520,21 @@ setInterval(
     loadDashboard,
     5000
 )
+
+// DARK MODE
+
+const toggle =
+    document.getElementById(
+        "themeToggle"
+    )
+
+toggle.addEventListener(
+    "change",
+    () => {
+
+        document.body.classList
+            .toggle("dark-mode")
+    }
+)
+
+// EXPANDABLE CARDS

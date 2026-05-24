@@ -13,121 +13,288 @@
 
 <body>
 
-    <h1>DevOps Dashboard</h1>
-
-    <div id="alerts"></div>
-
     <div class="dashboard">
 
-        <div class="card">
-            <h2>Backend Status</h2>
-            <div class="metric" id="health"></div>
-        </div>
+        <!-- HEADER -->
 
-        <div class="card">
-            <h2>Server Uptime</h2>
-            <div class="metric" id="uptime"></div>
-        </div>
+        <div class="header">
 
-        <div class="card">
-            <h2>CPU Usage</h2>
-            <div class="metric" id="cpu"></div>
-        </div>
+            <div class="logo">
 
-        <div class="card">
-            <h2>RAM Usage</h2>
-            <div class="metric" id="ram"></div>
-        </div>
+                🖥️ DevOps Dashboard
 
-        <div class="card">
-            <h2>Disk Usage</h2>
-            <div class="metric" id="disk"></div>
-        </div>
-
-        <div class="card">
-            <h2>Network Traffic</h2>
-            <div id="network"></div>
-        </div>
-
-        <div class="card">
-            <h2>System Info</h2>
-            <div id="system"></div>
-        </div>
-
-        <div class="card">
-            <h2>Services</h2>
-            <div id="services"></div>
-        </div>
-
-        <div class="card">
-            <h2>Open Ports</h2>
-            <div id="ports"></div>
-        </div>
-
-        <div class="card">
-            <h2>Last Refresh</h2>
-            <div id="lastUpdated"></div>
-        </div>
-
-        <div class="card">
-            <h2>Top Processes</h2>
-            <div id="processes"></div>
-        </div>
-
-        <div class="card">
-            <h2>Docker Containers</h2>
-
-            <div id="docker" class="container-list">
             </div>
-        </div>
 
-        <div class="card">
-            <h2>Container Metrics</h2>
+            <div class="header-actions">
 
-            <div id="containerStats">
-            </div>
-        </div>
+                <span>Dark Mode</span>
 
-        <div class="card chart-container">
-            <h2>CPU History</h2>
+                <label class="switch">
 
-            <canvas id="cpuChart"></canvas>
-        </div>
+                    <input type="checkbox" id="themeToggle">
 
-        <div class="card chart-container">
-            <h2>RAM History</h2>
+                    <span class="slider"></span>
 
-            <canvas id="ramChart"></canvas>
-        </div>
+                </label>
 
-        <div class="card" style="grid-column:1/-1;">
-
-            <h2>Live Logs</h2>
-
-            <div id="logs" class="logs-box">
             </div>
 
         </div>
 
-    </div>
+        <!-- TOP METRICS -->
 
-    <div class="modal" id="logModal">
+        <div class="metrics-grid">
 
-        <div class="modal-content">
+            <div class="metric-card">
 
-            <div class="modal-header">
+                <div class="metric-title">
+                    Status
+                </div>
 
-                <h2>Container Logs</h2>
+                <div class="metric-value green" id="health"></div>
 
-                <button class="close-btn" onclick="closeModal()">
-
-                    Close
-
-                </button>
+                <div class="metric-sub">
+                    All systems operational
+                </div>
 
             </div>
 
-            <div id="modalLogs" class="modal-logs">
+            <div class="metric-card">
+
+                <div class="metric-title">
+                    CPU Usage
+                </div>
+
+                <div class="metric-value blue" id="cpu"></div>
+
+                <div class="progress-bar">
+
+                    <div id="cpuBar" class="progress-fill blue-fill"></div>
+
+                </div>
+
+            </div>
+
+            <div class="metric-card">
+
+                <div class="metric-title">
+                    RAM Usage
+                </div>
+
+                <div class="metric-value purple" id="ram"></div>
+
+                <div class="progress-bar">
+
+                    <div id="ramBar" class="progress-fill purple-fill"></div>
+
+                </div>
+
+            </div>
+
+            <div class="metric-card">
+
+                <div class="metric-title">
+                    Disk Usage
+                </div>
+
+                <div class="metric-value green" id="disk"></div>
+
+                <div class="progress-bar">
+
+                    <div id="diskBar" class="progress-fill green-fill"></div>
+
+                </div>
+
+            </div>
+
+            <div class="metric-card">
+
+                <div class="metric-title">
+                    Uptime
+                </div>
+
+                <div class="metric-value orange" id="uptime"></div>
+
+            </div>
+
+        </div>
+
+        <!-- CONTAINERS -->
+
+        <div class="containers-grid">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    📦 Docker Containers
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>CONTAINER</th>
+                                <th>STATUS</th>
+                                <th>PORTS</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="docker">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    📊 Container Metrics
+
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>CONTAINER</th>
+                                <th>CPU</th>
+                                <th>MEMORY</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="containerStats">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- CHARTS -->
+
+        <div class="charts-grid">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    📈 CPU History
+
+                </div>
+
+                <canvas id="cpuChart"></canvas>
+
+            </div>
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    📈 RAM History
+
+                </div>
+
+                <canvas id="ramChart"></canvas>
+
+            </div>
+
+        </div>
+
+        <!-- LOWER -->
+
+        <div class="system-grid">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    ⚙ Processes
+
+                </div>
+
+                <div class="table-wrapper" id="processes"></div>
+
+            </div>
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    🌐 Network & Ports
+
+                </div>
+
+                <div id="network"></div>
+
+                <br>
+
+                <div id="ports"></div>
+
+            </div>
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    ℹ System Info & Services
+
+                </div>
+
+                <div id="system"></div>
+
+                <br>
+
+                <div id="services"></div>
+
+            </div>
+
+        </div>
+
+        <!-- LOGS -->
+
+        <div class="logs-grid">
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    💻 Live Logs
+
+                </div>
+
+                <div class="logs-box" id="logs"></div>
+
+            </div>
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    🛡 Audit Logs
+
+                </div>
+
+                <div class="logs-box" id="auditLogs"></div>
+
             </div>
 
         </div>
@@ -135,16 +302,6 @@
     </div>
 
     <script src="app.js"></script>
-    <div class="card" style="grid-column:1/-1;">
-
-        <h2>
-            Audit Logs
-        </h2>
-
-        <div id="auditLogs" class="logs-box">
-        </div>
-
-    </div>
 
 </body>
 
