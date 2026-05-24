@@ -286,26 +286,37 @@ func GetConnections(c *gin.Context) {
 
 func GetOpenPorts(c *gin.Context) {
 
-	cmd := exec.Command("netstat", "-ano")
+	cmd := exec.Command(
+		"netstat",
+		"-ano",
+	)
 
 	output, err := cmd.Output()
 
 	if err != nil {
 
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to get ports",
+			"ports": []string{
+				"Unable to fetch ports",
+			},
 		})
 
 		return
 	}
 
-	lines := strings.Split(string(output), "\n")
+	lines := strings.Split(
+		string(output),
+		"\n",
+	)
 
 	var ports []string
 
 	for _, line := range lines {
 
-		if strings.Contains(line, "LISTENING") {
+		if strings.Contains(
+			line,
+			"LISTENING",
+		) {
 
 			fields := strings.Fields(line)
 
@@ -319,9 +330,15 @@ func GetOpenPorts(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"ports": ports,
-	})
+	if len(ports) == 0 {
+
+		ports = append(
+			ports,
+			"No active ports",
+		)
+	}
+
+	c.JSON(http.StatusOK, ports)
 }
 
 func GetServices(c *gin.Context) {

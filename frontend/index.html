@@ -1,7 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>DevOps Dashboard</title>
 
@@ -17,7 +21,7 @@
 
         <!-- HEADER -->
 
-        <div class="header">
+        <header class="header">
 
             <div class="logo">
 
@@ -25,47 +29,77 @@
 
             </div>
 
-            <div class="header-actions">
+            <div class="header-right">
 
-                <span>Dark Mode</span>
+                <div id="lastRefresh" class="last-refresh">
 
-                <label class="switch">
+                    Last Refresh: --
 
-                    <input type="checkbox" id="themeToggle">
+                </div>
 
-                    <span class="slider"></span>
+                <div class="theme-toggle">
 
-                </label>
+                    <span>Dark Mode</span>
+
+                    <label class="switch">
+
+                        <input type="checkbox" id="themeToggle">
+
+                        <span class="slider"></span>
+
+                    </label>
+
+                </div>
 
             </div>
 
-        </div>
+        </header>
+
+        <!-- ALERTS -->
+
+        <section class="alerts-card">
+
+            <div class="section-title">
+
+                🚨 Active Alerts
+
+            </div>
+
+            <div id="alerts"></div>
+
+        </section>
 
         <!-- TOP METRICS -->
 
-        <div class="metrics-grid">
+        <section class="top-grid">
 
             <div class="metric-card">
 
-                <div class="metric-title">
-                    Status
+                <div class="metric-title">Status</div>
+
+                <div class="metric-value green" id="health">
+
+                    running
+
                 </div>
 
-                <div class="metric-value green" id="health"></div>
-
                 <div class="metric-sub">
+
                     All systems operational
+
                 </div>
 
             </div>
 
             <div class="metric-card">
 
-                <div class="metric-title">
-                    CPU Usage
-                </div>
+                <div class="metric-title">CPU Usage</div>
 
-                <div class="metric-value blue" id="cpu"></div>
+                <div class="metric-value blue" id="cpu">
+
+                    0%
+
+                </div>
 
                 <div class="progress-bar">
 
@@ -77,11 +111,13 @@
 
             <div class="metric-card">
 
-                <div class="metric-title">
-                    RAM Usage
-                </div>
+                <div class="metric-title">RAM Usage</div>
 
-                <div class="metric-value purple" id="ram"></div>
+                <div class="metric-value purple" id="ram">
+
+                    0%
+
+                </div>
 
                 <div class="progress-bar">
 
@@ -93,11 +129,13 @@
 
             <div class="metric-card">
 
-                <div class="metric-title">
-                    Disk Usage
-                </div>
+                <div class="metric-title">Disk Usage</div>
 
-                <div class="metric-value green" id="disk"></div>
+                <div class="metric-value green" id="disk">
+
+                    0%
+
+                </div>
 
                 <div class="progress-bar">
 
@@ -109,38 +147,51 @@
 
             <div class="metric-card">
 
-                <div class="metric-title">
-                    Uptime
+                <div class="metric-title">Uptime</div>
+
+                <div class="metric-value orange" id="uptime">
+
+                    0m
+
                 </div>
 
-                <div class="metric-value orange" id="uptime"></div>
+                <div class="metric-sub">
+
+                    Since last restart
+
+                </div>
 
             </div>
 
-        </div>
+        </section>
 
-        <!-- CONTAINERS -->
+        <!-- DOCKER -->
 
-        <div class="containers-grid">
+        <section class="middle-grid">
 
-            <div class="card">
+            <div class="card large-card">
 
-                <div class="card-header">
+                <div class="section-title">
 
                     📦 Docker Containers
 
                 </div>
 
-                <div class="table-wrapper">
+                <div class="scroll-box">
 
                     <table>
 
                         <thead>
 
                             <tr>
-                                <th>CONTAINER</th>
+
+                                <th>ID</th>
+                                <th>NAME</th>
+                                <th>IMAGE</th>
                                 <th>STATUS</th>
                                 <th>PORTS</th>
+                                <th>ACTIONS</th>
+
                             </tr>
 
                         </thead>
@@ -157,22 +208,24 @@
 
             <div class="card">
 
-                <div class="card-header">
+                <div class="section-title">
 
                     📊 Container Metrics
 
                 </div>
 
-                <div class="table-wrapper">
+                <div class="scroll-box">
 
                     <table>
 
                         <thead>
 
                             <tr>
+
                                 <th>CONTAINER</th>
                                 <th>CPU</th>
                                 <th>MEMORY</th>
+
                             </tr>
 
                         </thead>
@@ -187,57 +240,65 @@
 
             </div>
 
-        </div>
+        </section>
 
         <!-- CHARTS -->
 
-        <div class="charts-grid">
+        <section class="charts-grid">
 
-            <div class="card">
+            <div class="card chart-card">
 
-                <div class="card-header">
+                <div class="section-title">
 
                     📈 CPU History
 
                 </div>
 
-                <canvas id="cpuChart"></canvas>
+                <div class="chart-wrapper">
+
+                    <canvas id="cpuChart"></canvas>
+
+                </div>
 
             </div>
 
-            <div class="card">
+            <div class="card chart-card">
 
-                <div class="card-header">
+                <div class="section-title">
 
                     📈 RAM History
 
                 </div>
 
-                <canvas id="ramChart"></canvas>
+                <div class="chart-wrapper">
+
+                    <canvas id="ramChart"></canvas>
+
+                </div>
 
             </div>
 
-        </div>
+        </section>
 
-        <!-- LOWER -->
+        <!-- SYSTEM -->
 
-        <div class="system-grid">
+        <section class="system-grid">
 
             <div class="card">
 
-                <div class="card-header">
+                <div class="section-title">
 
                     ⚙ Processes
 
                 </div>
 
-                <div class="table-wrapper" id="processes"></div>
+                <div id="processes" class="scroll-box"></div>
 
             </div>
 
             <div class="card">
 
-                <div class="card-header">
+                <div class="section-title">
 
                     🌐 Network & Ports
 
@@ -247,13 +308,13 @@
 
                 <br>
 
-                <div id="ports"></div>
+                <div id="ports" class="scroll-box"></div>
 
             </div>
 
             <div class="card">
 
-                <div class="card-header">
+                <div class="section-title">
 
                     ℹ System Info & Services
 
@@ -267,15 +328,15 @@
 
             </div>
 
-        </div>
+        </section>
 
         <!-- LOGS -->
 
-        <div class="logs-grid">
+        <section class="logs-grid">
 
             <div class="card">
 
-                <div class="card-header">
+                <div class="section-title">
 
                     💻 Live Logs
 
@@ -287,7 +348,7 @@
 
             <div class="card">
 
-                <div class="card-header">
+                <div class="section-title">
 
                     🛡 Audit Logs
 
@@ -297,7 +358,7 @@
 
             </div>
 
-        </div>
+        </section>
 
     </div>
 
