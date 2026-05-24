@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>DevOps Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <h1>DevOps Dashboard</h1>
+
+    <div class="card">
+        <div class="card">
+
+            <h2>Server Uptime</h2>
+
+            <button onclick="getUptime()">
+                Get Uptime
+            </button>
+
+            <p id="uptime-result"></p>
+
+        </div>
+        <h2>Backend Status</h2>
+
+        <button onclick="checkBackend()">
+            Check Backend
+        </button>
+
+        <p id="result"></p>
+    </div>
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>
