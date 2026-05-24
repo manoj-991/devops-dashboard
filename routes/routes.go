@@ -120,4 +120,6 @@ protected.GET(
 	"/audit-logs",
 	handlers.GetAuditLogs,
 )
+router.GET(
+	"/api/container-logs
 }

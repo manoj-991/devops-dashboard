@@ -523,56 +523,36 @@ async function loadDashboard() {
 
                 <td>
 
-                    <div class="actions">
+                   <div class="actions">
 
-                        ${container.state === "running"
-                    ?
-                    `
-                        <button
-                        class="text-btn stop-btn"
-                        onclick="
-                        containerAction(
-                        'stop',
-                        '${container.name}'
-                        )
-                        ">
+    <button
+        class="text-btn start-btn"
+        onclick="containerAction(
+            'start',
+            '${container.name}'
+        )"
+    >
+        Start
+    </button>
 
-                            Stop
+    <button
+        class="text-btn restart-btn"
+        onclick="containerAction(
+            'restart',
+            '${container.name}'
+        )"
+    >
+        Restart
+    </button>
 
-                        </button>
-                        `
-                    :
-                    `
-                        <button
-                        class="text-btn start-btn"
-                        onclick="
-                        containerAction(
-                        'start',
-                        '${container.name}'
-                        )
-                        ">
+   <button
+    class="text-btn logs-btn"
+    onclick="openLogs('${container.name}')"
+>
+    Logs
+</button>
 
-                            Start
-
-                        </button>
-                        `
-                }
-
-                        <button
-                        class="text-btn restart-btn"
-                        onclick="
-                        containerAction(
-                        'restart',
-                        '${container.name}'
-                        )
-                        ">
-
-                            Restart
-
-                        </button>
-
-                    </div>
-
+</div>
                 </td>
 
             </tr>
@@ -591,26 +571,80 @@ async function loadDashboard() {
 
     if (Array.isArray(stats)) {
 
+        statsHTML += `
+
+    <table class="metrics-table">
+
+        <thead>
+
+            
+
+        </thead>
+
+        <tbody>
+    `
+
         stats.forEach(stat => {
-
             statsHTML += `
-            <tr>
 
-                <td>${stat.name}</td>
+<div class="metric-row">
 
-                <td>${stat.cpu}</td>
+    <div class="metric-col metric-name">
 
-                <td>${stat.memory}</td>
+        ${stat.name}
 
-            </tr>
-            `
+    </div>
+
+    <div class="metric-col">
+
+        ${stat.cpu}
+
+    </div>
+
+    <div class="metric-col">
+
+        ${stat.memory}
+
+    </div>
+
+</div>
+`
         })
-    }
 
+        statsHTML += `
+        </tbody>
+
+    </table>
+    `
+    }
     document.getElementById(
         "containerStats"
-    ).innerHTML =
-        statsHTML
+    ).innerHTML = `
+
+<div class="metric-header">
+
+    <div class="metric-col metric-name">
+
+        CONTAINER
+
+    </div>
+
+    <div class="metric-col">
+
+        CPU
+
+    </div>
+
+    <div class="metric-col">
+
+        MEMORY
+
+    </div>
+
+</div>
+
+${statsHTML}
+`
 
     /* LOGS */
     let logContent =
@@ -1172,24 +1206,61 @@ async function loadDashboard() {
             }
         }
     )
+}
+loadDashboard()
 
-    loadDashboard()
+setInterval(
+    loadDashboard,
+    5000
+)
 
-    setInterval(
-        loadDashboard,
-        5000
+document
+    .getElementById("themeToggle")
+    .addEventListener(
+        "change",
+        () => {
+
+            document.body.classList.toggle(
+                "dark-mode"
+            )
+        }
     )
+async function openLogs(name) {
 
-    document
-        .getElementById(
-            "themeToggle"
-        )
-        .addEventListener(
-            "change",
-            () => {
+    try {
 
-                document.body
-                    .classList
-                    .toggle("dark-mode")
-            }
-        )
+        const response =
+            await fetch(
+                `/api/container-logs/${name}`
+            )
+
+        const data =
+            await response.json()
+
+        document.getElementById(
+            "containerLogs"
+        ).innerText =
+            data.logs
+
+        document.getElementById(
+            "logsModal"
+        ).style.display =
+            "flex"
+
+    } catch (error) {
+
+        console.error(error)
+    }
+}
+document
+    .getElementById("closeLogs")
+    .addEventListener(
+        "click",
+        () => {
+
+            document
+                .getElementById("logsModal")
+                .style.display =
+                "none"
+        }
+    )

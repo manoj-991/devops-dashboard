@@ -409,7 +409,8 @@ input:checked+.slider::before {
     font-weight: 700;
 }
 
-/* BUTTONS */
+
+/* ACTION BUTTONS */
 
 .actions {
 
@@ -422,8 +423,7 @@ input:checked+.slider::before {
 
     border: none;
 
-    padding:
-        10px 16px;
+    padding: 10px 16px;
 
     border-radius: 10px;
 
@@ -434,23 +434,45 @@ input:checked+.slider::before {
     cursor: pointer;
 
     transition: 0.2s;
+
+    min-width: 80px;
 }
 
 .text-btn:hover {
 
     transform: translateY(-1px);
+
+    opacity: 0.92;
 }
 
+/* START */
+
 .start-btn {
+
     background: #22c55e;
 }
 
+/* STOP */
+
 .stop-btn {
+
     background: #ef4444;
 }
 
+/* RESTART */
+
 .restart-btn {
+
     background: #f59e0b;
+}
+
+/* LOGS */
+
+.logs-btn {
+
+    background: #4f46e5;
+
+    color: white;
 }
 
 /* CHART */
@@ -527,7 +549,7 @@ canvas {
 #processes div {
 
     border-bottom:
-        1px solid #e5e7eb;
+        1px solid #105aee;
 
     padding-bottom: 12px;
 
@@ -914,5 +936,260 @@ canvas {
     .service-status {
 
         min-width: 100px;
+    }
+}
+
+/* =========================
+   CONTAINER METRICS TABLE
+========================= */
+
+.metrics-table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    margin-top: 18px;
+}
+
+.metrics-table thead {
+
+    background: #f8fafc;
+}
+
+.metrics-table th {
+
+    text-align: left;
+
+    padding: 14px 18px;
+
+    font-size: 12px;
+
+    font-weight: 800;
+
+    letter-spacing: 1px;
+
+    text-transform: uppercase;
+
+    color: #64748b;
+
+    border-bottom:
+        2px solid #e5e7eb;
+}
+
+.metrics-table td {
+
+    padding: 16px 18px;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    border-bottom:
+        1px solid #e5e7eb;
+}
+
+.metrics-table tbody tr {
+
+    transition: 0.2s;
+}
+
+.metrics-table tbody tr:hover {
+
+    background: #f8fafc;
+}
+
+/* CPU */
+
+.metric-cpu {
+
+    color: #2563eb;
+
+    font-weight: 800;
+}
+
+/* MEMORY */
+
+.metric-memory {
+
+    color: #9333ea;
+
+    font-weight: 800;
+}
+
+/* DARK MODE */
+
+.dark-mode .metrics-table thead {
+
+    background: #1e293b;
+}
+
+.dark-mode .metrics-table th {
+
+    color: #cbd5e1;
+
+    border-color: #334155;
+}
+
+.dark-mode .metrics-table td {
+
+    border-color: #334155;
+}
+
+.dark-mode .metrics-table tbody tr:hover {
+
+    background: #263245;
+}
+
+/* =========================
+   CONTAINER METRICS
+========================= */
+
+.metric-header,
+.metric-row {
+
+    display: grid;
+
+    grid-template-columns:
+        2fr 1fr 1.5fr;
+
+    align-items: center;
+
+    gap: 20px;
+
+    padding: 14px 0;
+}
+
+.metric-header {
+
+    font-size: 12px;
+
+    font-weight: 800;
+
+    color: #64748b;
+
+    letter-spacing: 1px;
+
+    text-transform: uppercase;
+
+    margin-bottom: 8px;
+}
+
+.metric-row {
+
+    font-size: 14px;
+
+    font-weight: 600;
+}
+
+.metric-name {
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+/* =========================
+   LOGS MODAL
+========================= */
+
+.logs-modal {
+
+    position: fixed;
+
+    inset: 0;
+
+    background:
+        rgba(0, 0, 0, 0.6);
+
+    display: none;
+
+    align-items: center;
+
+    justify-content: center;
+
+    z-index: 9999;
+}
+
+.logs-modal-content {
+
+    width: 80%;
+
+    max-width: 1000px;
+
+    height: 80vh;
+
+    background: #111827;
+
+    border-radius: 18px;
+
+    overflow: hidden;
+
+    display: flex;
+
+    flex-direction: column;
+}
+
+.logs-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 18px 24px;
+
+    background: #1f2937;
+
+    color: rgb(227, 9, 9);
+}
+
+.logs-header button {
+
+    background: #ef4444;
+
+    border: none;
+
+    color: rgb(40, 11, 224);
+
+    width: 38px;
+
+    height: 38px;
+
+    border-radius: 10px;
+
+    cursor: pointer;
+
+    font-size: 18px;
+}
+
+#containerLogs {
+
+    flex: 1;
+
+    overflow: auto;
+
+    padding: 20px;
+
+    color: #00ff88;
+
+    font-size: 13px;
+
+    font-family: monospace;
+
+    white-space: pre-wrap;
+
+    .logs-btn {
+
+        background: #4f46e5 !important;
+
+        color: white !important;
+
+        border: none;
+
+        font-weight: 700;
     }
 }

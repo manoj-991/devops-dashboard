@@ -206,4 +206,31 @@ func StopContainer(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Container stopped",
 	})
+	func GetContainerLogs(c *gin.Context) {
+
+	name := c.Param("name")
+
+	cmd := exec.Command(
+		"docker",
+		"logs",
+		"--tail",
+		"50",
+		name,
+	)
+
+	output, err := cmd.CombinedOutput()
+
+	if err != nil {
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"logs": "Unable to fetch logs",
+		})
+
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"logs": string(output),
+	})
+}
 }
