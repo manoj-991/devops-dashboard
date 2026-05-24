@@ -1,4 +1,6 @@
-[INFO] Dashboard started
-[INFO] Metrics collection running
-[WARNING] CPU spike detected
-[INFO] Docker monitoring active
+[INFO] Backend server started
+[INFO] Metrics collector running
+[INFO] Docker monitoring enabled
+[INFO] API healthy
+[WARNING] RAM usage reached 72%
+[INFO] Container nginx running

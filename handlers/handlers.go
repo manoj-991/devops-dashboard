@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"sort"
-	"time"
 	"os/exec"
-"strings"
+	"sort"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -41,14 +41,11 @@ func StartMetricCollector() {
 
 		for {
 
-			cpuPercent, _ :=
-				cpu.Percent(time.Second, false)
+			cpuPercent, _ := cpu.Percent(time.Second, false)
 
-			vm, _ :=
-				mem.VirtualMemory()
+			vm, _ := mem.VirtualMemory()
 
-			currentTime :=
-				time.Now().Format("04:05")
+			currentTime := time.Now().Format("03:04:05 PM")
 
 			CPUHistory = append(
 				CPUHistory,
@@ -67,19 +64,15 @@ func StartMetricCollector() {
 			)
 
 			if len(CPUHistory) > 20 {
-
 				CPUHistory = CPUHistory[1:]
 			}
 
 			if len(RAMHistory) > 20 {
-
 				RAMHistory = RAMHistory[1:]
 			}
 
 			time.Sleep(
-				time.Duration(
-					config.MetricInterval,
-				) * time.Second,
+				time.Duration(config.MetricInterval) * time.Second,
 			)
 		}
 	}()
@@ -103,24 +96,19 @@ func GetUptime(c *gin.Context) {
 
 func GetCPU(c *gin.Context) {
 
-	percent, err :=
-		cpu.Percent(time.Second, false)
+	percent, err := cpu.Percent(time.Second, false)
 
 	if err != nil {
 
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error": "CPU error",
-			},
-		)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "CPU error",
+		})
 
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"cpu":
-			fmt.Sprintf("%.2f%%", percent[0]),
+		"cpu": fmt.Sprintf("%.2f%%", percent[0]),
 	})
 }
 
@@ -130,43 +118,33 @@ func GetRAM(c *gin.Context) {
 
 	if err != nil {
 
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error": "RAM error",
-			},
-		)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "RAM error",
+		})
 
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"ram":
-			fmt.Sprintf("%.2f%%", vm.UsedPercent),
+		"ram": fmt.Sprintf("%.2f%%", vm.UsedPercent),
 	})
 }
 
 func GetDisk(c *gin.Context) {
 
-	diskStat, err :=
-		disk.Usage("/")
+	diskStat, err := disk.Usage("/")
 
 	if err != nil {
 
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error": "Disk error",
-			},
-		)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Disk error",
+		})
 
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"disk":
-			fmt.Sprintf("%.2f%%",
-				diskStat.UsedPercent),
+		"disk": fmt.Sprintf("%.2f%%", diskStat.UsedPercent),
 	})
 }
 
@@ -176,12 +154,9 @@ func GetSystemInfo(c *gin.Context) {
 
 	if err != nil {
 
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error": "System error",
-			},
-		)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "System error",
+		})
 
 		return
 	}
@@ -195,18 +170,13 @@ func GetSystemInfo(c *gin.Context) {
 
 func GetProcesses(c *gin.Context) {
 
-	processes, err :=
-		process.Processes()
+	processes, err := process.Processes()
 
 	if err != nil {
 
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error":
-					"Failed to get processes",
-			},
-		)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to get processes",
+		})
 
 		return
 	}
@@ -221,8 +191,7 @@ func GetProcesses(c *gin.Context) {
 			continue
 		}
 
-		cpuPercent, err :=
-			p.CPUPercent()
+		cpuPercent, err := p.CPUPercent()
 
 		if err != nil {
 			continue
@@ -237,17 +206,11 @@ func GetProcesses(c *gin.Context) {
 		)
 	}
 
-	sort.Slice(
-		processList,
-		func(i, j int) bool {
-
-			return processList[i].CPU >
-				processList[j].CPU
-		},
-	)
+	sort.Slice(processList, func(i, j int) bool {
+		return processList[i].CPU > processList[j].CPU
+	})
 
 	if len(processList) > 5 {
-
 		processList = processList[:5]
 	}
 
@@ -262,13 +225,9 @@ func GetLogs(c *gin.Context) {
 
 	if err != nil {
 
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error":
-					"Cannot read logs",
-			},
-		)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Cannot read logs",
+		})
 
 		return
 	}
@@ -287,96 +246,68 @@ func GetRAMHistory(c *gin.Context) {
 
 	c.JSON(http.StatusOK, RAMHistory)
 }
+
 func GetNetworkStats(c *gin.Context) {
 
-	stats, err :=
-		net.IOCounters(false)
+	stats, err := net.IOCounters(false)
 
 	if err != nil {
 
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error":
-					"Network stats error",
-			},
-		)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Network stats error",
+		})
 
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-
-		"bytes_sent":
-			stats[0].BytesSent,
-
-		"bytes_received":
-			stats[0].BytesRecv,
+		"bytes_sent":     stats[0].BytesSent,
+		"bytes_received": stats[0].BytesRecv,
 	})
 }
 
 func GetConnections(c *gin.Context) {
 
-	connections, err :=
-		net.Connections("all")
+	connections, err := net.Connections("all")
 
 	if err != nil {
 
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error":
-					"Connections failed",
-			},
-		)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Connections failed",
+		})
 
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"connections":
-			len(connections),
+		"connections": len(connections),
 	})
 }
 
 func GetOpenPorts(c *gin.Context) {
 
-	cmd := exec.Command(
-		"netstat",
-		"-ano",
-	)
+	cmd := exec.Command("netstat", "-ano")
 
 	output, err := cmd.Output()
 
 	if err != nil {
 
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error":
-					"Failed to get ports",
-			},
-		)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to get ports",
+		})
 
 		return
 	}
 
-	lines := strings.Split(
-		string(output),
-		"\n",
-	)
+	lines := strings.Split(string(output), "\n")
 
 	var ports []string
 
 	for _, line := range lines {
 
-		if strings.Contains(
-			line,
-			"LISTENING",
-		) {
+		if strings.Contains(line, "LISTENING") {
 
-			fields :=
-				strings.Fields(line)
+			fields := strings.Fields(line)
 
 			if len(fields) > 1 {
 
@@ -396,50 +327,30 @@ func GetOpenPorts(c *gin.Context) {
 func GetServices(c *gin.Context) {
 
 	services := []gin.H{
-
 		{
-			"name":
-				"Backend API",
-
-			"status":
-				"healthy",
+			"name":   "Backend API",
+			"status": "healthy",
 		},
-
 		{
-			"name":
-				"Docker Engine",
-
-			"status":
-				"healthy",
+			"name":   "Docker Engine",
+			"status": "healthy",
 		},
-
 		{
-			"name":
-				"Monitoring",
-
-			"status":
-				"healthy",
+			"name":   "Monitoring",
+			"status": "healthy",
 		},
 	}
 
-	c.JSON(
-		http.StatusOK,
-		services,
-	)
+	c.JSON(http.StatusOK, services)
 }
 
-func formatDuration(
-	duration time.Duration,
-) string {
+func formatDuration(duration time.Duration) string {
 
-	hours :=
-		int(duration.Hours())
+	hours := int(duration.Hours())
 
-	minutes :=
-		int(duration.Minutes()) % 60
+	minutes := int(duration.Minutes()) % 60
 
-	seconds :=
-		int(duration.Seconds()) % 60
+	seconds := int(duration.Seconds()) % 60
 
 	return fmt.Sprintf(
 		"%dh %dm %ds",
@@ -447,4 +358,22 @@ func formatDuration(
 		minutes,
 		seconds,
 	)
+}
+
+func GetAuditLogs(c *gin.Context) {
+
+	data, err := os.ReadFile("logs/audit.log")
+
+	if err != nil {
+
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Cannot read audit logs",
+		})
+
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"logs": string(data),
+	})
 }

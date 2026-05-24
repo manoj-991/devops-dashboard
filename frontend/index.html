@@ -21,124 +21,61 @@
 
         <div class="card">
             <h2>Backend Status</h2>
-            <div class="description">
-                Current backend server health.
-            </div>
-            <div id="health" class="metric">
-                Loading...
-                <div class="card">
-
-    <h2>Services</h2>
-
-    <div class="description">
-        Infrastructure service health.
-    </div>
-
-    <div id="services">
-    </div>
-<div class="card">
-
-    <h2>Open Ports</h2>
-
-    <div class="description">
-        Listening network ports.
-    </div>
-
-    <div id="ports">
-    </div>
-
-</div>
-<div class="card">
-
-    <h2>Last Refresh</h2>
-
-    <div class="description">
-        Latest metrics refresh.
-    </div>
-
-    <div id="lastUpdated">
-    </div>
-
-</div>
-</div>
-            </div>
+            <div class="metric" id="health"></div>
         </div>
 
         <div class="card">
             <h2>Server Uptime</h2>
-            <div class="description">
-                Total running duration.
-            </div>
-            <div id="uptime" class="metric">
-                Loading...
-            </div>
+            <div class="metric" id="uptime"></div>
         </div>
 
         <div class="card">
             <h2>CPU Usage</h2>
-            <div class="description">
-                Current processor load.
-            </div>
-            <div id="cpu" class="metric">
-                Loading...
-            </div>
+            <div class="metric" id="cpu"></div>
         </div>
 
         <div class="card">
             <h2>RAM Usage</h2>
-            <div class="description">
-                Current memory consumption.
-            </div>
-            <div id="ram" class="metric">
-                Loading...
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>Network Traffic</h2>
-            <div class="description">
-                Upload and download usage.
-            </div>
-            <div id="network">
-                Loading...
-            </div>
+            <div class="metric" id="ram"></div>
         </div>
 
         <div class="card">
             <h2>Disk Usage</h2>
-            <div class="description">
-                Current storage utilization.
-            </div>
-            <div id="disk" class="metric">
-                Loading...
-            </div>
+            <div class="metric" id="disk"></div>
+        </div>
+
+        <div class="card">
+            <h2>Network Traffic</h2>
+            <div id="network"></div>
         </div>
 
         <div class="card">
             <h2>System Info</h2>
-            <div class="description">
-                Operating system details.
-            </div>
-            <div id="system">
-                Loading...
-            </div>
+            <div id="system"></div>
+        </div>
+
+        <div class="card">
+            <h2>Services</h2>
+            <div id="services"></div>
+        </div>
+
+        <div class="card">
+            <h2>Open Ports</h2>
+            <div id="ports"></div>
+        </div>
+
+        <div class="card">
+            <h2>Last Refresh</h2>
+            <div id="lastUpdated"></div>
         </div>
 
         <div class="card">
             <h2>Top Processes</h2>
-            <div class="description">
-                Highest CPU-consuming processes.
-            </div>
-            <div id="processes">
-                Loading...
-            </div>
+            <div id="processes"></div>
         </div>
 
         <div class="card">
             <h2>Docker Containers</h2>
-            <div class="description">
-                Running and stopped containers.
-            </div>
 
             <div id="docker" class="container-list">
             </div>
@@ -146,9 +83,6 @@
 
         <div class="card">
             <h2>Container Metrics</h2>
-            <div class="description">
-                Live container resource usage.
-            </div>
 
             <div id="containerStats">
             </div>
@@ -167,14 +101,12 @@
         </div>
 
         <div class="card" style="grid-column:1/-1;">
-            <h2>Live Logs</h2>
 
-            <div class="description">
-                Real-time application logs.
-            </div>
+            <h2>Live Logs</h2>
 
             <div id="logs" class="logs-box">
             </div>
+
         </div>
 
     </div>
@@ -188,7 +120,9 @@
                 <h2>Container Logs</h2>
 
                 <button class="close-btn" onclick="closeModal()">
+
                     Close
+
                 </button>
 
             </div>
@@ -201,6 +135,16 @@
     </div>
 
     <script src="app.js"></script>
+    <div class="card" style="grid-column:1/-1;">
+
+        <h2>
+            Audit Logs
+        </h2>
+
+        <div id="auditLogs" class="logs-box">
+        </div>
+
+    </div>
 
 </body>
 

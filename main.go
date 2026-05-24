@@ -37,6 +37,7 @@ func main() {
 	handlers.StartMetricCollector()
 
 	routes.SetupRoutes(router)
+	handlers.StartMetricCollector()
 
-	router.Run(":" + config.Port)
+	router.Run(":9090")
 }

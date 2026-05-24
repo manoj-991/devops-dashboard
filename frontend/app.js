@@ -1,156 +1,114 @@
-const cpuChartCtx =
-    document.getElementById("cpuChart")
-
-const ramChartCtx =
-    document.getElementById("ramChart")
-
 const cpuChart =
-    new Chart(cpuChartCtx, {
+    new Chart(
+        document.getElementById("cpuChart"),
+        {
+            type: "line",
 
-        type: "line",
-
-        data: {
-
-            labels: [],
-
-            datasets: [{
-
-                label: "CPU %",
-
-                data: [],
-
-                borderWidth: 2,
-
-                tension: 0.4,
-
-                fill: true
-            }]
+            data: {
+                labels: [],
+                datasets: [{
+                    label: "CPU %",
+                    data: [],
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            }
         }
-    })
+    )
 
 const ramChart =
-    new Chart(ramChartCtx, {
+    new Chart(
+        document.getElementById("ramChart"),
+        {
+            type: "line",
 
-        type: "line",
-
-        data: {
-
-            labels: [],
-
-            datasets: [{
-
-                label: "RAM %",
-
-                data: [],
-
-                borderWidth: 2,
-
-                tension: 0.4,
-
-                fill: true
-            }]
+            data: {
+                labels: [],
+                datasets: [{
+                    label: "RAM %",
+                    data: [],
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true
+                }]
+            }
         }
-    })
+    )
 
 async function loadDashboard() {
+    const audit =
+        await fetch(
+            "/api/audit-logs"
+        )
+            .then(r => r.json())
+
+    document
+        .getElementById("auditLogs")
+        .innerText =
+        audit.logs || "No audit logs"
 
     try {
 
         // HEALTH
-        const healthRes =
-            await fetch("/api/health")
-
         const health =
-            await healthRes.json()
+            await fetch("/api/health")
+                .then(r => r.json())
 
         document
             .getElementById("health")
             .innerText =
-            health.status
+            health.status || "Unknown"
 
 
         // UPTIME
-        const uptimeRes =
-            await fetch("/api/uptime")
-
         const uptime =
-            await uptimeRes.json()
+            await fetch("/api/uptime")
+                .then(r => r.json())
 
         document
             .getElementById("uptime")
             .innerText =
-            uptime.uptime
+            uptime.uptime || "N/A"
 
 
         // CPU
-        const cpuRes =
-            await fetch("/api/cpu")
-
         const cpu =
-            await cpuRes.json()
+            await fetch("/api/cpu")
+                .then(r => r.json())
 
         document
             .getElementById("cpu")
             .innerText =
-            cpu.cpu
+            cpu.cpu || "N/A"
 
 
         // RAM
-        const ramRes =
-            await fetch("/api/ram")
-
         const ram =
-            await ramRes.json()
+            await fetch("/api/ram")
+                .then(r => r.json())
 
         document
             .getElementById("ram")
             .innerText =
-            ram.ram
+            ram.ram || "N/A"
 
 
         // DISK
-        const diskRes =
-            await fetch("/api/disk")
-
         const disk =
-            await diskRes.json()
+            await fetch("/api/disk")
+                .then(r => r.json())
 
         document
             .getElementById("disk")
             .innerText =
-            disk.disk
-
-
-        // SYSTEM
-        const systemRes =
-            await fetch("/api/system")
-
-        const system =
-            await systemRes.json()
-
-        document
-            .getElementById("system")
-            .innerHTML = `
-
-        OS: ${system.os}
-        <br><br>
-
-        Platform:
-        ${system.platform}
-
-        <br><br>
-
-        Host:
-        ${system.hostname}
-        `
+            disk.disk || "N/A"
 
 
         // NETWORK
-        const networkRes =
-            await fetch("/api/network")
-
         const network =
-            await networkRes.json()
+            await fetch("/api/network")
+                .then(r => r.json())
 
         document
             .getElementById("network")
@@ -168,33 +126,139 @@ async function loadDashboard() {
         `
 
 
-        // PROCESSES
-        const processRes =
-            await fetch("/api/processes")
+        // SYSTEM
+        const system =
+            await fetch("/api/system")
+                .then(r => r.json())
 
+        document
+            .getElementById("system")
+            .innerHTML = `
+
+        OS:
+        ${system.os}
+
+        <br><br>
+
+        Platform:
+        ${system.platform}
+
+        <br><br>
+
+        Host:
+        ${system.hostname}
+        `
+
+
+        // SERVICES
+        const services =
+            await fetch("/api/services")
+                .then(r => r.json())
+
+        let servicesHTML = ""
+
+        if (Array.isArray(services)) {
+
+            services.forEach(service => {
+
+                servicesHTML += `
+
+                <div
+                style="
+                margin-bottom:10px;
+                ">
+
+                    <span class="
+                    status-running
+                    ">
+                    ●
+                    </span>
+
+                    ${service.name}
+
+                </div>
+                `
+            })
+        }
+
+        document
+            .getElementById("services")
+            .innerHTML =
+            servicesHTML
+
+
+        // PORTS
+        const ports =
+            await fetch("/api/ports")
+                .then(r => r.json())
+
+        let portsHTML = ""
+
+        if (Array.isArray(ports.ports)) {
+
+            ports.ports
+                .slice(0, 8)
+                .forEach(port => {
+
+                    portsHTML += `
+
+                <div
+                style="
+                margin-bottom:8px;
+                ">
+
+                    ${port}
+
+                </div>
+                `
+                })
+        }
+
+        document
+            .getElementById("ports")
+            .innerHTML =
+            portsHTML
+
+
+        // LAST UPDATED
+        document
+            .getElementById("lastUpdated")
+            .innerText =
+            new Date()
+                .toLocaleTimeString()
+
+
+        // PROCESSES
         const processes =
-            await processRes.json()
+            await fetch("/api/processes")
+                .then(r => r.json())
 
         let processHTML = ""
 
-        processes.forEach(process => {
+        if (Array.isArray(processes)) {
 
-            processHTML += `
+            processes.forEach(process => {
 
-            <div style="margin-bottom:12px;">
+                processHTML += `
 
-                <strong>
-                ${process.name}
-                </strong>
+                <div
+                style="
+                margin-bottom:12px;
+                ">
 
-                <br>
+                    <strong>
+                    ${process.name}
+                    </strong>
 
-                CPU:
-                ${process.cpu.toFixed(2)}%
+                    <br>
 
-            </div>
-            `
-        })
+                    CPU:
+                    ${process.cpu.toFixed(2)}%
+
+                </div>
+                `
+            })
+        }
 
         document
             .getElementById("processes")
@@ -203,97 +267,142 @@ async function loadDashboard() {
 
 
         // DOCKER
-        const dockerRes =
-            await fetch("/api/docker")
-
         const containers =
-            await dockerRes.json()
+            await fetch("/api/docker")
+                .then(r => r.json())
 
         let dockerHTML = ""
-        containers.forEach(container => {
 
-            dockerHTML += `
+        if (Array.isArray(containers)) {
 
-    <div class="container-item">
+            containers.forEach(container => {
 
-        <strong>
-        ${container.name || "Unknown"}
-        </strong>
+                dockerHTML += `
 
-        <br><br>
+                <div class="container-item">
 
-        Image:
-        ${container.image || "N/A"}
+                    <strong>
+                    ${container.name}
+                    </strong>
 
-        <br><br>
+                    <br><br>
 
-        State:
+                    Image:
+                    ${container.image}
 
-        <span class="
-        ${container.state === "running"
-                    ? "status-running"
-                    : "status-exited"}
-        ">
+                    <br><br>
 
-        ${container.state || "unknown"}
+                    State:
 
-        </span>
+                    <span class="
+                    ${container.state === "running"
+                        ? "status-running"
+                        : "status-exited"}
+                    ">
 
-        <br><br>
+                    ${container.state}
 
-        Status:
-        ${container.status || "N/A"}
+                    </span>
 
-        <div class="btn-group">
+                    <br><br>
 
-            <button
-            class="logs-btn"
-            onclick="
-            showContainerLogs(
-            '${container.name}'
-            )
-            ">
-                Logs
-            </button>
+                    Status:
+                    ${container.status}
 
-            <button
-            class="start-btn"
-            onclick="
-            containerAction(
-            'start',
-            '${container.name}'
-            )
-            ">
-                Start
-            </button>
+                    <div class="btn-group">
 
-            <button
-            class="stop-btn"
-            onclick="
-            containerAction(
-            'stop',
-            '${container.name}'
-            )
-            ">
-                Stop
-            </button>
+                        <button
+                        class="logs-btn"
+                        onclick="
+                        showContainerLogs(
+                        '${container.name}'
+                        )
+                        ">
+                            Logs
+                        </button>
 
-            <button
-            class="restart-btn"
-            onclick="
-            containerAction(
-            'restart',
-            '${container.name}'
-            )
-            ">
-                Restart
-            </button>
+                        <button
+                        class="start-btn"
+                        onclick="
+                        containerAction(
+                        'start',
+                        '${container.name}'
+                        )
+                        ">
+                            Start
+                        </button>
 
-        </div>
+                        <button
+                        class="stop-btn"
+                        onclick="
+                        containerAction(
+                        'stop',
+                        '${container.name}'
+                        )
+                        ">
+                            Stop
+                        </button>
 
-    </div>
-    `
-        })
+                        <button
+                        class="restart-btn"
+                        onclick="
+                        containerAction(
+                        'restart',
+                        '${container.name}'
+                        )
+                        ">
+                            Restart
+                        </button>
+
+                    </div>
+
+                </div>
+                `
+            })
+        }
+
+        document
+            .getElementById("docker")
+            .innerHTML =
+            dockerHTML
+
+
+        // CONTAINER STATS
+        const stats =
+            await fetch("/api/container-stats")
+                .then(r => r.json())
+
+        let statsHTML = ""
+
+        if (Array.isArray(stats)) {
+
+            stats.forEach(stat => {
+
+                statsHTML += `
+
+                <div
+                style="
+                margin-bottom:14px;
+                ">
+
+                    <strong>
+                    ${stat.name}
+                    </strong>
+
+                    <br>
+
+                    CPU:
+                    ${stat.cpu}
+
+                    <br>
+
+                    Memory:
+                    ${stat.memory}
+
+                </div>
+                `
+            })
+        }
 
         document
             .getElementById("containerStats")
@@ -302,53 +411,62 @@ async function loadDashboard() {
 
 
         // LOGS
-        const logsRes =
-            await fetch("/api/logs")
-
         const logs =
-            await logsRes.json()
+            await fetch("/api/logs")
+                .then(r => r.json())
 
         document
             .getElementById("logs")
             .innerText =
-            logs.logs
+            logs.logs || "No logs"
 
 
         // CPU HISTORY
-        const cpuHistoryRes =
-            await fetch("/api/cpu-history")
-
         const cpuHistory =
-            await cpuHistoryRes.json()
+            await fetch("/api/cpu-history")
+                .then(r => r.json())
 
-        cpuChart.data.labels =
-            cpuHistory.map(point => point.time)
+        if (Array.isArray(cpuHistory)) {
 
-        cpuChart.data.datasets[0].data =
-            cpuHistory.map(point => point.value)
+            cpuChart.data.labels =
+                cpuHistory.map(
+                    point => point.time
+                )
 
-        cpuChart.update()
+            cpuChart.data.datasets[0].data =
+                cpuHistory.map(
+                    point => point.value
+                )
+
+            cpuChart.update()
+        }
 
 
         // RAM HISTORY
-        const ramHistoryRes =
-            await fetch("/api/ram-history")
-
         const ramHistory =
-            await ramHistoryRes.json()
+            await fetch("/api/ram-history")
+                .then(r => r.json())
 
-        ramChart.data.labels =
-            ramHistory.map(point => point.time)
+        if (Array.isArray(ramHistory)) {
 
-        ramChart.data.datasets[0].data =
-            ramHistory.map(point => point.value)
+            ramChart.data.labels =
+                ramHistory.map(
+                    point => point.time
+                )
 
-        ramChart.update()
+            ramChart.data.datasets[0].data =
+                ramHistory.map(
+                    point => point.value
+                )
+
+            ramChart.update()
+        }
 
 
         // ALERTS
         const alerts =
-            document.getElementById("alerts")
+            document
+                .getElementById("alerts")
 
         alerts.innerHTML = ""
 
@@ -375,13 +493,11 @@ async function loadDashboard() {
 
 async function showContainerLogs(name) {
 
-    const response =
+    const data =
         await fetch(
             `/api/container-logs/${name}`
         )
-
-    const data =
-        await response.json()
+            .then(r => r.json())
 
     document
         .getElementById("logModal")
@@ -391,7 +507,7 @@ async function showContainerLogs(name) {
     document
         .getElementById("modalLogs")
         .innerText =
-        data.logs
+        data.logs || "No logs"
 }
 
 function closeModal() {
@@ -401,6 +517,7 @@ function closeModal() {
         .style.display =
         "none"
 }
+
 async function containerAction(
     action,
     name
@@ -415,6 +532,7 @@ async function containerAction(
 
     loadDashboard()
 }
+
 loadDashboard()
 
 setInterval(

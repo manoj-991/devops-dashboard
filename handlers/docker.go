@@ -34,21 +34,13 @@ func GetDockerInfo(c *gin.Context) {
 	output, err := cmd.Output()
 
 	if err != nil {
-
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error": "Docker not available",
-			},
-		)
-
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Docker not available",
+		})
 		return
 	}
 
-	lines := strings.Split(
-		strings.TrimSpace(string(output)),
-		"\n",
-	)
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
 
 	var containers []DockerContainer
 
@@ -60,15 +52,12 @@ func GetDockerInfo(c *gin.Context) {
 			continue
 		}
 
-		containers = append(
-			containers,
-			DockerContainer{
-				Name:   parts[0],
-				Image:  parts[1],
-				State:  parts[2],
-				Status: parts[3],
-			},
-		)
+		containers = append(containers, DockerContainer{
+			Name:   parts[0],
+			Image:  parts[1],
+			State:  parts[2],
+			Status: parts[3],
+		})
 	}
 
 	c.JSON(http.StatusOK, containers)
@@ -87,22 +76,13 @@ func GetContainerStats(c *gin.Context) {
 	output, err := cmd.Output()
 
 	if err != nil {
-
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error":
-					"Docker stats failed",
-			},
-		)
-
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Docker stats failed",
+		})
 		return
 	}
 
-	lines := strings.Split(
-		strings.TrimSpace(string(output)),
-		"\n",
-	)
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
 
 	var stats []DockerStat
 
@@ -114,14 +94,11 @@ func GetContainerStats(c *gin.Context) {
 			continue
 		}
 
-		stats = append(
-			stats,
-			DockerStat{
-				Name:   parts[0],
-				CPU:    parts[1],
-				Memory: parts[2],
-			},
-		)
+		stats = append(stats, DockerStat{
+			Name:   parts[0],
+			CPU:    parts[1],
+			Memory: parts[2],
+		})
 	}
 
 	c.JSON(http.StatusOK, stats)
@@ -142,15 +119,9 @@ func GetContainerLogs(c *gin.Context) {
 	output, err := cmd.CombinedOutput()
 
 	if err != nil {
-
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error":
-					"Failed to fetch logs",
-			},
-		)
-
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch logs",
+		})
 		return
 	}
 
@@ -172,24 +143,20 @@ func RestartContainer(c *gin.Context) {
 	err := cmd.Run()
 
 	if err != nil {
-
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error":
-					"Restart failed",
-			},
-		)
-
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Restart failed",
+		})
 		return
 	}
 
+	WriteAuditLog("Container restarted: " + name)
+
 	c.JSON(http.StatusOK, gin.H{
-		"message":
-			"Container restarted",
+		"message": "Container restarted",
 	})
 }
-	func StartContainer(c *gin.Context) {
+
+func StartContainer(c *gin.Context) {
 
 	name := c.Param("name")
 
@@ -202,21 +169,16 @@ func RestartContainer(c *gin.Context) {
 	err := cmd.Run()
 
 	if err != nil {
-
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error":
-					"Start failed",
-			},
-		)
-
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Start failed",
+		})
 		return
 	}
 
+	WriteAuditLog("Container started: " + name)
+
 	c.JSON(http.StatusOK, gin.H{
-		"message":
-			"Container started",
+		"message": "Container started",
 	})
 }
 
@@ -233,20 +195,15 @@ func StopContainer(c *gin.Context) {
 	err := cmd.Run()
 
 	if err != nil {
-
-		c.JSON(
-			http.StatusInternalServerError,
-			gin.H{
-				"error":
-					"Stop failed",
-			},
-		)
-
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Stop failed",
+		})
 		return
 	}
 
+	WriteAuditLog("Container stopped: " + name)
+
 	c.JSON(http.StatusOK, gin.H{
-		"message":
-			"Container stopped",
+		"message": "Container stopped",
 	})
 }

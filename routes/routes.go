@@ -116,4 +116,8 @@ protected.POST(
 	"/container-stop/:name",
 	handlers.StopContainer,
 )
+protected.GET(
+	"/audit-logs",
+	handlers.GetAuditLogs,
+)
 }
