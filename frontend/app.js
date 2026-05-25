@@ -1,28 +1,75 @@
+/* =========================
+   GLOBALS
+========================= */
+
+let cpuChart = null
+let ramChart = null
+
+let currentHost =
+    "http://localhost:9090"
+
+let activeLogSocket = null
+
+/* =========================
+   DOM
+========================= */
+
 const cpuCanvas =
     document.getElementById("cpuChart")
 
 const ramCanvas =
     document.getElementById("ramChart")
 
-let cpuChart
-let ramChart
+/* =========================
+   FETCH HELPER
+========================= */
 
 async function fetchData(url) {
 
     try {
 
         const response =
-            await fetch(url)
+            await fetch(
+                `${currentHost}${url}`
+            )
 
         return await response.json()
 
     } catch (error) {
 
-        console.error(error)
+        console.error(
+            "Fetch failed:",
+            url,
+            error
+        )
 
         return null
     }
 }
+
+/* =========================
+   SAFE VALUE
+========================= */
+
+function safeValue(
+    value,
+    fallback = "N/A"
+) {
+
+    if (
+        value === undefined ||
+        value === null
+    ) {
+
+        return fallback
+    }
+
+    return value
+}
+
+/* =========================
+   CONTAINER ACTIONS
+========================= */
 
 async function containerAction(
     action,
@@ -32,7 +79,9 @@ async function containerAction(
     try {
 
         await fetch(
-            `/api/container-${action}/${name}`,
+
+            `${currentHost}/api/container-${action}/${name}`,
+
             {
                 method: "POST"
             }
@@ -46,430 +95,294 @@ async function containerAction(
     }
 }
 
-function safeValue(value, fallback = "N/A") {
+/* =========================
+   DELETE CONTAINER
+========================= */
 
-    if (
-        value === undefined ||
-        value === null
-    ) {
+async function deleteContainer(name) {
 
-        return fallback
+    const confirmDelete =
+        confirm(
+            `Delete ${name}?`
+        )
+
+    if (!confirmDelete) return
+
+    try {
+
+        await fetch(
+
+            `${currentHost}/api/docker/delete/${name}`,
+
+            {
+                method: "DELETE"
+            }
+        )
+
+        loadDashboard()
+
+    } catch (error) {
+
+        console.error(error)
+    }
+}
+
+/* =========================
+   LIVE LOG STREAMING
+========================= */
+
+function openLogs(name) {
+
+    const modal =
+        document.getElementById(
+            "logsModal"
+        )
+
+    const logs =
+        document.getElementById(
+            "containerLogs"
+        )
+
+    modal.style.display =
+        "flex"
+
+    logs.innerText = ""
+
+    if (activeLogSocket) {
+
+        activeLogSocket.close()
     }
 
-    return value
+    const wsURL =
+
+        currentHost
+            .replace("http", "ws") +
+
+        `/ws/logs/${name}`
+
+    activeLogSocket =
+        new WebSocket(wsURL)
+
+    activeLogSocket.onmessage =
+        (event) => {
+
+            logs.innerText +=
+                event.data + "\n"
+
+            logs.scrollTop =
+                logs.scrollHeight
+        }
+
+    activeLogSocket.onerror =
+        (error) => {
+
+            console.error(
+                "WebSocket failed",
+                error
+            )
+        }
 }
+
+/* =========================
+   CLOSE LOGS MODAL
+========================= */
+
+const closeLogsBtn =
+    document.getElementById(
+        "closeLogs"
+    )
+
+if (closeLogsBtn) {
+
+    closeLogsBtn.addEventListener(
+        "click",
+        () => {
+
+            document
+                .getElementById(
+                    "logsModal"
+                )
+                .style.display =
+                "none"
+
+            if (activeLogSocket) {
+
+                activeLogSocket.close()
+            }
+        }
+    )
+}
+
+/* =========================
+   MAIN DASHBOARD
+========================= */
 
 async function loadDashboard() {
 
-    const [
-        health,
-        uptime,
-        cpu,
-        ram,
-        disk,
-        docker,
-        stats,
-        logs,
-        cpuHistory,
-        ramHistory,
-        network,
-        processes,
-        system,
-        ports,
-        services
-    ] = await Promise.all([
+    const results =
+        await Promise.all([
 
-        fetchData("/api/health"),
-        fetchData("/api/uptime"),
-        fetchData("/api/cpu"),
-        fetchData("/api/ram"),
-        fetchData("/api/disk"),
-        fetchData("/api/docker"),
-        fetchData("/api/container-stats"),
-        fetchData("/api/logs"),
-        fetchData("/api/cpu-history"),
-        fetchData("/api/ram-history"),
-        fetchData("/api/network"),
-        fetchData("/api/processes"),
-        fetchData("/api/system"),
-        fetchData("/api/ports"),
-        fetchData("/api/services")
-    ])
+            fetchData("/api/health"),
+            fetchData("/api/uptime"),
+            fetchData("/api/cpu"),
+            fetchData("/api/ram"),
+            fetchData("/api/disk"),
+            fetchData("/api/docker"),
+            fetchData("/api/container-stats"),
+            fetchData("/api/cpu-history"),
+            fetchData("/api/ram-history"),
+            fetchData("/api/system"),
+            fetchData("/api/processes"),
+            fetchData("/api/network"),
+            fetchData("/api/ports"),
+            fetchData("/api/logs"),
+            fetchData("/api/audit-logs")
 
-    /* REFRESH */
+        ])
 
-    document.getElementById(
-        "lastRefresh"
-    ).innerText =
-        "Last Refresh: " +
-        new Date()
-            .toLocaleTimeString()
+    const health =
+        results[0]
 
-    /* METRICS */
+    const uptime =
+        results[1]
 
-    const cpuUsage =
-        safeValue(cpu?.usage || cpu?.cpu, "0%")
+    const cpu =
+        results[2]
 
-    const ramUsage =
-        safeValue(ram?.usage || ram?.ram, "0%")
+    const ram =
+        results[3]
 
-    const diskUsage =
-        safeValue(disk?.usage || disk?.disk, "0%")
+    const disk =
+        results[4]
+
+    const docker =
+        results[5]
+
+    const stats =
+        results[6]
+
+    const cpuHistory =
+        results[7]
+
+    const ramHistory =
+        results[8]
+
+    const system =
+        results[9]
+
+    const processes =
+        results[10]
+
+    const network =
+        results[11]
+
+    const ports =
+        results[12]
+
+    const logs =
+        results[13]
+
+    const auditLogs =
+        results[14]
+
+    /* =========================
+       REFRESH TIME
+    ========================= */
+
+    const refresh =
+        document.getElementById(
+            "lastRefresh"
+        )
+
+    if (refresh) {
+
+        refresh.innerText =
+
+            "Last Refresh: " +
+
+            new Date()
+                .toLocaleTimeString()
+    }
+
+    /* =========================
+       TOP METRICS
+    ========================= */
 
     document.getElementById(
         "health"
     ).innerText =
-        safeValue(health?.status, "running")
+
+        safeValue(
+            health?.status,
+            "running"
+        )
 
     document.getElementById(
         "uptime"
     ).innerText =
-        safeValue(uptime?.uptime, "0m")
+
+        safeValue(
+            uptime?.uptime,
+            "0m"
+        )
+
+    const cpuValue =
+
+        safeValue(
+            cpu?.usage ||
+            cpu?.cpu,
+            "0%"
+        )
+
+    const ramValue =
+
+        safeValue(
+            ram?.usage ||
+            ram?.ram,
+            "0%"
+        )
+
+    const diskValue =
+
+        safeValue(
+            disk?.usage ||
+            disk?.disk,
+            "0%"
+        )
 
     document.getElementById(
         "cpu"
     ).innerText =
-        cpuUsage
+        cpuValue
 
     document.getElementById(
         "ram"
     ).innerText =
-        ramUsage
+        ramValue
 
     document.getElementById(
         "disk"
     ).innerText =
-        diskUsage
+        diskValue
 
     document.getElementById(
         "cpuBar"
     ).style.width =
-        cpuUsage
+        cpuValue
 
     document.getElementById(
         "ramBar"
     ).style.width =
-        ramUsage
+        ramValue
 
     document.getElementById(
         "diskBar"
     ).style.width =
-        diskUsage
-
-    /* ALERT SYSTEM */
-
-    let alertsHTML = ""
-
-    let criticalCount = 0
-    let warningCount = 0
-    let infoCount = 0
-
-    const cpuNumber =
-        parseFloat(cpuUsage)
-
-    const ramNumber =
-        parseFloat(ramUsage)
-
-    const diskNumber =
-        parseFloat(diskUsage)
+        diskValue
 
     /* =========================
-       CRITICAL ALERTS
+       DOCKER TABLE
     ========================= */
-
-    if (cpuNumber >= 95) {
-
-        criticalCount++
-
-        alertsHTML += `
-
-    <div class="alert-item alert-critical">
-
-        <div>
-
-            🔴 CPU usage critically high
-            (${cpuUsage})
-
-        </div>
-
-        <div class="alert-meta">
-
-            Immediate investigation required
-
-        </div>
-
-    </div>
-    `
-    }
-
-    if (ramNumber >= 90) {
-
-        criticalCount++
-
-        alertsHTML += `
-
-    <div class="alert-item alert-critical">
-
-        <div>
-
-            🔴 RAM usage critically high
-            (${ramUsage})
-
-        </div>
-
-        <div class="alert-meta">
-
-            Possible system instability
-
-        </div>
-
-    </div>
-    `
-    }
-
-    if (diskNumber >= 85) {
-
-        criticalCount++
-
-        alertsHTML += `
-
-    <div class="alert-item alert-critical">
-
-        <div>
-
-            🔴 Disk usage critically high
-            (${diskUsage})
-
-        </div>
-
-        <div class="alert-meta">
-
-            Storage capacity nearing limit
-
-        </div>
-
-    </div>
-    `
-    }
-
-    /* =========================
-       WARNING ALERTS
-    ========================= */
-
-    if (cpuNumber >= 75 &&
-        cpuNumber < 95) {
-
-        warningCount++
-
-        alertsHTML += `
-
-    <div class="alert-item alert-warning">
-
-        <div>
-
-            🟡 CPU usage elevated
-            (${cpuUsage})
-
-        </div>
-
-        <div class="alert-meta">
-
-            Monitor workload trends
-
-        </div>
-
-    </div>
-    `
-    }
-
-    if (ramNumber >= 80 &&
-        ramNumber < 90) {
-
-        warningCount++
-
-        alertsHTML += `
-
-    <div class="alert-item alert-warning">
-
-        <div>
-
-            🟡 RAM usage elevated
-            (${ramUsage})
-
-        </div>
-
-        <div class="alert-meta">
-
-            Memory consumption increasing
-
-        </div>
-
-    </div>
-    `
-    }
-
-    if (diskNumber >= 70 &&
-        diskNumber < 85) {
-
-        warningCount++
-
-        alertsHTML += `
-
-    <div class="alert-item alert-warning">
-
-        <div>
-
-            🟡 Disk usage elevated
-            (${diskUsage})
-
-        </div>
-
-        <div class="alert-meta">
-
-            Cleanup recommended soon
-
-        </div>
-
-    </div>
-    `
-    }
-
-    /* =========================
-       CONTAINER HEALTH
-    ========================= */
-
-    if (Array.isArray(stats)) {
-
-        stats.forEach(stat => {
-
-            const cpuStat =
-                parseFloat(stat.cpu)
-
-            if (cpuStat >= 80) {
-
-                warningCount++
-
-                alertsHTML += `
-
-            <div class="alert-item alert-warning">
-
-                <div>
-
-                    🟡 High container CPU:
-                    ${stat.name}
-
-                </div>
-
-                <div class="alert-meta">
-
-                    ${stat.cpu} CPU usage
-
-                </div>
-
-            </div>
-            `
-            }
-        })
-    }
-
-    /* =========================
-       HEALTH STATUS
-    ========================= */
-
-    if (
-        health &&
-        health.status &&
-        health.status !== "running"
-    ) {
-
-        criticalCount++
-
-        alertsHTML += `
-
-    <div class="alert-item alert-critical">
-
-        <div>
-
-            🔴 Backend health degraded
-
-        </div>
-
-        <div class="alert-meta">
-
-            API status abnormal
-
-        </div>
-
-    </div>
-    `
-    }
-
-    /* =========================
-       HEALTHY STATE
-    ========================= */
-
-    if (alertsHTML === "") {
-        infoCount++
-
-        alertsHTML += `
-
-<div class="alert-item alert-good">
-
-    <div>
-
-        🟢 Monitoring system healthy
-
-    </div>
-
-    <div class="alert-meta">
-
-        Automated infrastructure checks
-        running every 10 minutes
-
-    </div>
-
-</div>
-
-    `
-    }
-
-    /* =========================
-       ALERT HEADER COUNTS
-    ========================= */
-
-    const alertSummary = `
-
-<div class="alert-summary">
-
-    <span class="critical-counter">
-
-        🔴 ${criticalCount} Critical
-
-    </span>
-
-    <span class="warning-counter">
-
-        🟡 ${warningCount} Warning
-
-    </span>
-
-    <span class="info-counter">
-
-        🔵 ${infoCount} Info
-
-    </span>
-
-</div>
-
-`
-
-    document.getElementById(
-        "alerts"
-    ).innerHTML =
-        alertSummary +
-        alertsHTML
-
-    /* DOCKER */
 
     let dockerHTML = ""
 
@@ -478,85 +391,111 @@ async function loadDashboard() {
         docker.forEach(container => {
 
             const badge =
-                container.state === "running"
-                    ? "running-badge"
-                    : "stopped-badge"
+
+                container.state ===
+                "running"
+
+                ? "running-badge"
+
+                : "stopped-badge"
 
             dockerHTML += `
-            <tr>
 
-                <td>
+<tr>
 
-                    ${Math.random()
-                    .toString(16)
-                    .substring(2, 9)}
+<td>
+${Math.random()
+    .toString(16)
+    .substring(2, 9)}
+</td>
 
-                </td>
+<td>
+${container.name}
+</td>
 
-                <td>
+<td>
+${container.image}
+</td>
 
-                    ${container.name}
+<td>
 
-                </td>
+<span class="${badge}">
+${container.state}
+</span>
 
-                <td>
+</td>
 
-                    ${container.image}
+<td>
+${container.ports || "N/A"}
+</td>
 
-                </td>
+<td>
 
-                <td>
+<div class="container-actions">
 
-                    <span class="${badge}">
+${container.state === "running" ? `
 
-                        ${container.state}
-
-                    </span>
-
-                </td>
-
-                <td>
-
-                    80/tcp
-
-                </td>
-
-                <td>
-
-                   <div class="actions">
-
-    <button
-        class="text-btn start-btn"
-        onclick="containerAction(
-            'start',
-            '${container.name}'
-        )"
-    >
-        Start
-    </button>
-
-    <button
-        class="text-btn restart-btn"
-        onclick="containerAction(
-            'restart',
-            '${container.name}'
-        )"
-    >
-        Restart
-    </button>
-
-   <button
-    class="text-btn logs-btn"
-    onclick="openLogs('${container.name}')"
->
-    Logs
+<button
+class="text-btn stop-btn"
+onclick="containerAction(
+'stop',
+'${container.name}'
+)">
+Stop
 </button>
 
-</div>
-                </td>
+<button
+class="text-btn restart-btn"
+onclick="containerAction(
+'restart',
+'${container.name}'
+)">
+Restart
+</button>
 
-            </tr>
-            `
+<button
+class="text-btn logs-btn"
+onclick="openLogs(
+'${container.name}'
+)">
+Logs
+</button>
+
+` : `
+
+<button
+class="text-btn start-btn"
+onclick="containerAction(
+'start',
+'${container.name}'
+)">
+Start
+</button>
+
+<button
+class="text-btn logs-btn"
+onclick="openLogs(
+'${container.name}'
+)">
+Logs
+</button>
+
+<button
+class="text-btn delete-btn"
+onclick="deleteContainer(
+'${container.name}'
+)">
+Delete
+</button>
+
+`}
+
+</div>
+
+</td>
+
+</tr>
+`
         })
     }
 
@@ -565,658 +504,360 @@ async function loadDashboard() {
     ).innerHTML =
         dockerHTML
 
-    /* STATS */
+    /* =========================
+       CONTAINER STATS
+    ========================= */
 
     let statsHTML = ""
 
     if (Array.isArray(stats)) {
 
-        statsHTML += `
-
-    <table class="metrics-table">
-
-        <thead>
-
-            
-
-        </thead>
-
-        <tbody>
-    `
-
         stats.forEach(stat => {
+
             statsHTML += `
 
 <div class="metric-row">
 
-    <div class="metric-col metric-name">
+<div class="metric-col metric-name">
+${stat.name}
+</div>
 
-        ${stat.name}
+<div class="metric-col">
+${stat.cpu}
+</div>
 
-    </div>
-
-    <div class="metric-col">
-
-        ${stat.cpu}
-
-    </div>
-
-    <div class="metric-col">
-
-        ${stat.memory}
-
-    </div>
+<div class="metric-col">
+${stat.memory}
+</div>
 
 </div>
 `
         })
-
-        statsHTML += `
-        </tbody>
-
-    </table>
-    `
     }
+
     document.getElementById(
         "containerStats"
-    ).innerHTML = `
+    ).innerHTML =
 
+        `
 <div class="metric-header">
 
-    <div class="metric-col metric-name">
+<div class="metric-col metric-name">
+CONTAINER
+</div>
 
-        CONTAINER
+<div class="metric-col">
+CPU
+</div>
 
-    </div>
-
-    <div class="metric-col">
-
-        CPU
-
-    </div>
-
-    <div class="metric-col">
-
-        MEMORY
-
-    </div>
+<div class="metric-col">
+MEMORY
+</div>
 
 </div>
 
 ${statsHTML}
 `
 
-    /* LOGS */
-    let logContent =
-        "No logs available"
-
-    if (logs) {
-
-        if (typeof logs === "string") {
-
-            logContent =
-                logs
-
-        } else if (logs.logs) {
-
-            logContent =
-                logs.logs
-        }
-    }
+    /* =========================
+       SYSTEM INFO
+    ========================= */
 
     document.getElementById(
-        "logs"
-    ).innerText =
-        logContent
+        "system"
+    ).innerHTML =
 
-    document.getElementById(
-        "auditLogs"
-    ).innerText =
         `
-[INFO] Dashboard refreshed
-[INFO] Monitoring active
-[INFO] Containers healthy
+OS:
+${safeValue(system?.os)}
+
+<br><br>
+
+Platform:
+${safeValue(system?.platform)}
+
+<br><br>
+
+Host:
+${safeValue(system?.hostname)}
 `
 
     /* =========================
-     NETWORK
-  ========================= */
+       PROCESSES
+    ========================= */
 
-    let upload =
-        "N/A"
+    document.getElementById(
+        "processes"
+    ).innerHTML =
 
-    let download =
-        "N/A"
+        (processes?.processes || [])
+        .slice(0, 20)
+        .map(p => `
 
-    if (network) {
+<div class="process-item">
+${p}
+</div>
 
-        upload =
-            network.upload ||
-            network.Upload ||
-            "N/A"
+`)
+        .join("")
 
-        download =
-            network.download ||
-            network.Download ||
-            "N/A"
-    }
+    /* =========================
+       NETWORK
+    ========================= */
 
     document.getElementById(
         "network"
     ).innerHTML =
+
         `
-<div>
-
-    <b>Upload:</b>
-    ${upload}
-
-</div>
-
-<br>
-
-<div>
-
-    <b>Download:</b>
-    ${download}
-
-</div>
+<pre>
+${network?.network || "No network data"}
+</pre>
 `
 
     /* =========================
        PORTS
     ========================= */
 
-    let portsHTML = ""
-
-    if (Array.isArray(ports)) {
-
-        ports.forEach(port => {
-
-            portsHTML += `
-
-        <div style="
-        padding:8px 0;
-        border-bottom:
-        1px solid #e5e7eb;
-        ">
-
-            🔌 ${port}
-
-        </div>
-        `
-        })
-
-    } else if (typeof ports === "string") {
-
-        portsHTML = `
-
-    <div>
-
-        🔌 ${ports}
-
-    </div>
-    `
-    } else {
-
-        portsHTML = `
-
-    <div>
-
-        No active ports detected
-
-    </div>
-    `
-    }
-
     document.getElementById(
         "ports"
     ).innerHTML =
-        portsHTML
 
-    /* PROCESSES */
+        (ports?.ports || [])
+        .slice(0, 20)
+        .map(p => `
 
-    let processHTML = ""
+<div class="port-item">
+${p}
+</div>
 
-    if (Array.isArray(processes)) {
-
-        processes.forEach(process => {
-
-            processHTML += `
-            <div>
-
-                <b>
-
-                    ${safeValue(process.name)}
-
-                </b>
-
-                <br>
-
-                CPU:
-                ${safeValue(process.cpu)}
-
-            </div>
-            `
-        })
-    }
-
-    document.getElementById(
-        "processes"
-    ).innerHTML =
-        processHTML
-
-    /* SYSTEM */
-
-    document.getElementById(
-        "system"
-    ).innerHTML =
-        `
-    OS:
-    ${safeValue(system?.os)}
-
-    <br><br>
-
-    Platform:
-    ${safeValue(system?.platform)}
-
-    <br><br>
-
-    Host:
-    ${safeValue(system?.hostname)}
-    `
-    /* SERVICES */
-
-    let servicesHTML = ""
-
-    if (Array.isArray(services)) {
-
-        services.forEach(service => {
-
-            servicesHTML += `
-
-        <div class="service-row">
-
-            <div class="service-name">
-                ${service.name}
-            </div>
-
-            <div class="service-status running-badge">
-                ${service.status}
-            </div>
-
-        </div>
-        `
-        })
-    }
-
-    document.getElementById("services").innerHTML =
-        servicesHTML
+`)
+        .join("")
 
     /* =========================
-    CPU + RAM CHARTS
- ========================= */
+       LIVE LOGS
+    ========================= */
 
-    if (cpuChart) {
+    document.getElementById(
+        "logs"
+    ).innerHTML =
 
-        cpuChart.destroy()
-    }
+        `
+<pre>
+${logs?.logs || "No logs"}
+</pre>
+`
 
-    if (ramChart) {
+    /* =========================
+       AUDIT LOGS
+    ========================= */
 
-        ramChart.destroy()
-    }
+    document.getElementById(
+        "auditLogs"
+    ).innerHTML =
 
-    /* TIME LABELS */
+        `
+<pre>
+${auditLogs?.audit || "No audit logs"}
+</pre>
+`
 
-    const labels =
-        cpuHistory.map(
-            item => item.time
-        )
+    /* =========================
+       CPU CHART
+    ========================= */
 
-    /* CPU */
+    const cpuLabels =
 
-    cpuChart = new Chart(
-        cpuCanvas,
-        {
+        (cpuHistory || [])
+        .map(item => item.time)
 
-            type: "line",
+    const cpuValues =
 
-            data: {
+        (cpuHistory || [])
+        .map(item => item.value)
 
-                labels: labels,
+    if (!cpuChart) {
 
-                datasets: [{
+        cpuChart =
+            new Chart(
+                cpuCanvas,
+                {
 
-                    label: "CPU Usage %",
+                    type: "line",
 
-                    data:
-                        cpuHistory.map(
-                            item => item.value
-                        ),
+                    data: {
 
-                    borderColor: "#3b82f6",
+                        labels:
+                            cpuLabels,
 
-                    backgroundColor:
-                        "rgba(59,130,246,0.15)",
+                        datasets: [{
 
-                    fill: true,
+                            label:
+                                "CPU Usage %",
 
-                    tension: 0.45,
+                            data:
+                                cpuValues,
 
-                    pointRadius: 4,
+                            borderColor:
+                                "#3b82f6",
 
-                    pointHoverRadius: 7,
+                            backgroundColor:
+                                "rgba(59,130,246,0.15)",
 
-                    pointBackgroundColor: "#3b82f6",
+                            fill: true,
 
-                    borderWidth: 3
-                }]
-            },
-
-            options: {
-
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                interaction: {
-
-                    mode: "index",
-
-                    intersect: false
-                },
-
-                plugins: {
-
-                    legend: {
-
-                        display: true,
-
-                        labels: {
-
-                            font: {
-                                size: 14,
-                                weight: "bold"
-                            }
-                        }
+                            tension: 0.4
+                        }]
                     },
 
-                    tooltip: {
+                    options: {
 
-                        enabled: true,
+                        responsive: true,
 
-                        backgroundColor: "#111827",
+                        maintainAspectRatio: false,
 
-                        titleColor: "#ffffff",
+                        animation: false,
 
-                        bodyColor: "#ffffff",
+                        scales: {
 
-                        padding: 12,
+                            y: {
 
-                        cornerRadius: 10,
+                                beginAtZero: true,
 
-                        displayColors: true,
-
-                        callbacks: {
-
-                            label: function (context) {
-
-                                return `CPU Usage: ${context.raw}%`
+                                max: 100
                             }
-                        }
-                    }
-                },
-
-                scales: {
-
-                    y: {
-
-                        beginAtZero: true,
-
-                        max: 100,
-
-                        ticks: {
-
-                            stepSize: 10,
-
-                            color: "#64748b",
-
-                            font: {
-                                size: 12
-                            }
-                        },
-
-                        title: {
-
-                            display: true,
-
-                            text: "CPU Usage %",
-
-                            font: {
-                                size: 14,
-                                weight: "bold"
-                            }
-                        },
-
-                        grid: {
-
-                            color: "rgba(148,163,184,0.15)"
-                        }
-                    },
-
-                    x: {
-
-                        ticks: {
-
-                            color: "#64748b",
-
-                            maxRotation: 35,
-
-                            minRotation: 35,
-
-                            autoSkip: true,
-
-                            maxTicksLimit: 8
-                        },
-
-                        title: {
-
-                            display: true,
-
-                            text: "Time (5 sec interval)",
-
-                            font: {
-                                size: 13,
-                                weight: "bold"
-                            }
-                        },
-
-                        grid: {
-
-                            color: "rgba(148,163,184,0.1)"
                         }
                     }
                 }
-            }
-        }
+            )
+
+    } else {
+
+        cpuChart.data.labels =
+            cpuLabels
+
+        cpuChart.data.datasets[0].data =
+            cpuValues
+
+        cpuChart.update()
+    }
+
+    /* =========================
+       RAM CHART
+    ========================= */
+
+    const ramLabels =
+
+        (ramHistory || [])
+        .map(item => item.time)
+
+    const ramValues =
+
+        (ramHistory || [])
+        .map(item => item.value)
+
+    if (!ramChart) {
+
+        ramChart =
+            new Chart(
+                ramCanvas,
+                {
+
+                    type: "line",
+
+                    data: {
+
+                        labels:
+                            ramLabels,
+
+                        datasets: [{
+
+                            label:
+                                "RAM Usage %",
+
+                            data:
+                                ramValues,
+
+                            borderColor:
+                                "#a855f7",
+
+                            backgroundColor:
+                                "rgba(168,85,247,0.18)",
+
+                            fill: true,
+
+                            tension: 0.4
+                        }]
+                    },
+
+                    options: {
+
+                        responsive: true,
+
+                        maintainAspectRatio: false,
+
+                        animation: false,
+
+                        scales: {
+
+                            y: {
+
+                                beginAtZero: true,
+
+                                max: 100
+                            }
+                        }
+                    }
+                }
+            )
+
+    } else {
+
+        ramChart.data.labels =
+            ramLabels
+
+        ramChart.data.datasets[0].data =
+            ramValues
+
+        ramChart.update()
+    }
+}
+
+/* =========================
+   HOST SELECTOR
+========================= */
+
+const hostSelector =
+    document.getElementById(
+        "hostSelector"
     )
 
-    /* RAM */
+if (hostSelector) {
 
-    ramChart = new Chart(
-        ramCanvas,
-        {
+    hostSelector.addEventListener(
+        "change",
+        (e) => {
 
-            type: "line",
+            currentHost =
+                e.target.value
 
-            data: {
-
-                labels: labels,
-
-                datasets: [{
-
-                    label: "RAM Usage %",
-
-                    data:
-                        ramHistory.map(
-                            item => item.value
-                        ),
-
-                    borderColor: "#a855f7",
-
-                    backgroundColor:
-                        "rgba(168,85,247,0.18)",
-
-                    fill: true,
-
-                    tension: 0.45,
-
-                    pointRadius: 4,
-
-                    pointHoverRadius: 7,
-
-                    pointBackgroundColor: "#a855f7",
-
-                    borderWidth: 3
-                }]
-            },
-
-            options: {
-
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                interaction: {
-
-                    mode: "index",
-
-                    intersect: false
-                },
-
-                plugins: {
-
-                    legend: {
-
-                        display: true,
-
-                        labels: {
-
-                            font: {
-                                size: 14,
-                                weight: "bold"
-                            }
-                        }
-                    },
-
-                    tooltip: {
-
-                        enabled: true,
-
-                        backgroundColor: "#111827",
-
-                        titleColor: "#ffffff",
-
-                        bodyColor: "#ffffff",
-
-                        padding: 12,
-
-                        cornerRadius: 10,
-
-                        callbacks: {
-
-                            label: function (context) {
-
-                                return `RAM Usage: ${context.raw}%`
-                            }
-                        }
-                    }
-                },
-
-                scales: {
-
-                    y: {
-
-                        beginAtZero: true,
-
-                        max: 100,
-
-                        ticks: {
-
-                            stepSize: 10,
-
-                            color: "#64748b",
-
-                            font: {
-                                size: 12
-                            }
-                        },
-
-                        title: {
-
-                            display: true,
-
-                            text: "RAM Usage %",
-
-                            font: {
-                                size: 14,
-                                weight: "bold"
-                            }
-                        },
-
-                        grid: {
-
-                            color: "rgba(148,163,184,0.15)"
-                        }
-                    },
-
-                    x: {
-
-                        ticks: {
-
-                            color: "#64748b",
-
-                            maxRotation: 35,
-
-                            minRotation: 35,
-
-                            autoSkip: true,
-
-                            maxTicksLimit: 8
-                        },
-
-                        title: {
-
-                            display: true,
-
-                            text: "Time (5 sec interval)",
-
-                            font: {
-                                size: 13,
-                                weight: "bold"
-                            }
-                        },
-
-                        grid: {
-
-                            color: "rgba(148,163,184,0.1)"
-                        }
-                    }
-                }
-            }
+            loadDashboard()
         }
     )
 }
-loadDashboard()
 
-setInterval(
-    loadDashboard,
-    5000
-)
+/* =========================
+   THEME TOGGLE
+========================= */
 
-document
-    .getElementById("themeToggle")
-    .addEventListener(
+const themeToggle =
+    document.getElementById(
+        "themeToggle"
+    )
+
+if (themeToggle) {
+
+    themeToggle.addEventListener(
         "change",
         () => {
 
@@ -1225,42 +866,15 @@ document
             )
         }
     )
-async function openLogs(name) {
-
-    try {
-
-        const response =
-            await fetch(
-                `/api/container-logs/${name}`
-            )
-
-        const data =
-            await response.json()
-
-        document.getElementById(
-            "containerLogs"
-        ).innerText =
-            data.logs
-
-        document.getElementById(
-            "logsModal"
-        ).style.display =
-            "flex"
-
-    } catch (error) {
-
-        console.error(error)
-    }
 }
-document
-    .getElementById("closeLogs")
-    .addEventListener(
-        "click",
-        () => {
 
-            document
-                .getElementById("logsModal")
-                .style.display =
-                "none"
-        }
-    )
+/* =========================
+   START
+========================= */
+
+loadDashboard()
+
+setInterval(
+    loadDashboard,
+    5000
+)

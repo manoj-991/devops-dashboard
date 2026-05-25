@@ -40,4 +40,9 @@ func main() {
 	handlers.StartMetricCollector()
 
 	router.Run(":9090")
+
+	router.DELETE(
+	"/api/docker/delete/:name",
+	handlers.DeleteContainer,
+)
 }

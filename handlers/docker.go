@@ -21,6 +21,9 @@ type DockerStat struct {
 	Memory string `json:"memory"`
 }
 
+// =========================
+// GET ALL CONTAINERS
+// =========================
 func GetDockerInfo(c *gin.Context) {
 
 	cmd := exec.Command(
@@ -63,6 +66,9 @@ func GetDockerInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, containers)
 }
 
+// =========================
+// GET CONTAINER STATS
+// =========================
 func GetContainerStats(c *gin.Context) {
 
 	cmd := exec.Command(
@@ -104,6 +110,9 @@ func GetContainerStats(c *gin.Context) {
 	c.JSON(http.StatusOK, stats)
 }
 
+// =========================
+// GET CONTAINER LOGS
+// =========================
 func GetContainerLogs(c *gin.Context) {
 
 	name := c.Param("name")
@@ -130,6 +139,9 @@ func GetContainerLogs(c *gin.Context) {
 	})
 }
 
+// =========================
+// RESTART CONTAINER
+// =========================
 func RestartContainer(c *gin.Context) {
 
 	name := c.Param("name")
@@ -152,10 +164,13 @@ func RestartContainer(c *gin.Context) {
 	WriteAuditLog("Container restarted: " + name)
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Container restarted",
+		"message": "Container restarted successfully",
 	})
 }
 
+// =========================
+// START CONTAINER
+// =========================
 func StartContainer(c *gin.Context) {
 
 	name := c.Param("name")
@@ -178,10 +193,13 @@ func StartContainer(c *gin.Context) {
 	WriteAuditLog("Container started: " + name)
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Container started",
+		"message": "Container started successfully",
 	})
 }
 
+// =========================
+// STOP CONTAINER
+// =========================
 func StopContainer(c *gin.Context) {
 
 	name := c.Param("name")
@@ -196,7 +214,7 @@ func StopContainer(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Stop failed",
+			"error": "Failed to stop container",
 		})
 		return
 	}
@@ -204,33 +222,39 @@ func StopContainer(c *gin.Context) {
 	WriteAuditLog("Container stopped: " + name)
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Container stopped",
+		"message": "Container stopped successfully",
 	})
-	func GetContainerLogs(c *gin.Context) {
+}
+
+	
+// DELETE CONTAINER
+// =========================
+
+func DeleteContainer(c *gin.Context) {
 
 	name := c.Param("name")
 
 	cmd := exec.Command(
 		"docker",
-		"logs",
-		"--tail",
-		"50",
+		"rm",
+		"-f",
 		name,
 	)
 
-	output, err := cmd.CombinedOutput()
+	err := cmd.Run()
 
 	if err != nil {
 
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"logs": "Unable to fetch logs",
+			"error": "Delete failed",
 		})
 
 		return
 	}
 
+	WriteAuditLog("Container deleted: " + name)
+
 	c.JSON(http.StatusOK, gin.H{
-		"logs": string(output),
+		"message": "Container deleted successfully",
 	})
-}
 }

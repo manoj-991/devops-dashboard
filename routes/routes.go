@@ -60,6 +60,11 @@ func SetupRoutes(router *gin.Engine) {
 		handlers.GetDockerInfo,
 	)
 
+	router.GET(
+	"/api/system/metrics", 
+	handlers.GetSystemMetrics,
+)
+
 	protected.GET(
 		"/processes",
 		handlers.GetProcesses,
@@ -121,5 +126,7 @@ protected.GET(
 	handlers.GetAuditLogs,
 )
 router.GET(
-	"/api/container-logs
+	"/api/container-logs",
+	handlers.GetContainerLogs,
+)
 }
