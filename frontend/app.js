@@ -112,7 +112,7 @@ async function deleteContainer(name) {
 
         await fetch(
 
-            `${currentHost}/api/docker/delete/${name}`,
+            `${currentHost}/api/container-delete/${name}`,
 
             {
                 method: "DELETE"
@@ -125,62 +125,6 @@ async function deleteContainer(name) {
 
         console.error(error)
     }
-}
-
-/* =========================
-   LIVE LOG STREAMING
-========================= */
-
-function openLogs(name) {
-
-    const modal =
-        document.getElementById(
-            "logsModal"
-        )
-
-    const logs =
-        document.getElementById(
-            "containerLogs"
-        )
-
-    modal.style.display =
-        "flex"
-
-    logs.innerText = ""
-
-    if (activeLogSocket) {
-
-        activeLogSocket.close()
-    }
-
-    const wsURL =
-
-        currentHost
-            .replace("http", "ws") +
-
-        `/ws/logs/${name}`
-
-    activeLogSocket =
-        new WebSocket(wsURL)
-
-    activeLogSocket.onmessage =
-        (event) => {
-
-            logs.innerText +=
-                event.data + "\n"
-
-            logs.scrollTop =
-                logs.scrollHeight
-        }
-
-    activeLogSocket.onerror =
-        (error) => {
-
-            console.error(
-                "WebSocket failed",
-                error
-            )
-        }
 }
 
 /* =========================
@@ -285,6 +229,7 @@ async function loadDashboard() {
     const auditLogs =
         results[14]
 
+
     /* =========================
        REFRESH TIME
     ========================= */
@@ -380,6 +325,50 @@ async function loadDashboard() {
     ).style.width =
         diskValue
 
+    let alertsHTML = ""
+
+    if (cpuValue !== "0%") {
+
+        const cpuNum = parseFloat(cpuValue)
+
+        if (cpuNum > 80) {
+
+            alertsHTML += `
+            <div class="alert danger">
+                High CPU Usage: ${cpuValue}
+            </div>
+        `
+        }
+    }
+
+    if (ramValue !== "0%") {
+
+        const ramNum = parseFloat(ramValue)
+
+        if (ramNum > 80) {
+
+            alertsHTML += `
+            <div class="alert warning">
+                High RAM Usage: ${ramValue}
+            </div>
+        `
+        }
+    }
+
+    if (!alertsHTML) {
+
+        alertsHTML = `
+        <div class="alert success">
+            No active alerts
+        </div>
+    `
+    }
+
+    document.getElementById(
+        "alerts"
+    ).innerHTML = alertsHTML
+
+
     /* =========================
        DOCKER TABLE
     ========================= */
@@ -393,20 +382,18 @@ async function loadDashboard() {
             const badge =
 
                 container.state ===
-                "running"
+                    "running"
 
-                ? "running-badge"
+                    ? "running-badge"
 
-                : "stopped-badge"
+                    : "stopped-badge"
 
             dockerHTML += `
 
 <tr>
 
 <td>
-${Math.random()
-    .toString(16)
-    .substring(2, 9)}
+${container.id}
 </td>
 
 <td>
@@ -430,72 +417,50 @@ ${container.ports || "N/A"}
 </td>
 
 <td>
-
 <div class="container-actions">
 
 ${container.state === "running" ? `
 
 <button
 class="text-btn stop-btn"
-onclick="containerAction(
-'stop',
-'${container.name}'
-)">
+onclick="containerAction('stop','${container.name}')">
 Stop
 </button>
 
 <button
 class="text-btn restart-btn"
-onclick="containerAction(
-'restart',
-'${container.name}'
-)">
+onclick="containerAction('restart','${container.name}')">
 Restart
-</button>
-
-<button
-class="text-btn logs-btn"
-onclick="openLogs(
-'${container.name}'
-)">
-Logs
 </button>
 
 ` : `
 
 <button
 class="text-btn start-btn"
-onclick="containerAction(
-'start',
-'${container.name}'
-)">
+onclick="containerAction('start','${container.name}')">
 Start
 </button>
 
+`}
+
 <button
 class="text-btn logs-btn"
-onclick="openLogs(
-'${container.name}'
-)">
+onclick="window.openLogs('${container.name}')">
 Logs
 </button>
 
 <button
 class="text-btn delete-btn"
-onclick="deleteContainer(
-'${container.name}'
-)">
+onclick="deleteContainer('${container.name}')">
 Delete
 </button>
 
-`}
-
 </div>
 
-</td>
+</td >
 
-</tr>
-`
+</tr >
+            `
         })
     }
 
@@ -516,49 +481,47 @@ Delete
 
             statsHTML += `
 
-<div class="metric-row">
+        <div class="metric-row">
 
-<div class="metric-col metric-name">
-${stat.name}
-</div>
+            <div class="metric-col metric-name">
+                ${stat.name}
+            </div>
 
-<div class="metric-col">
-${stat.cpu}
-</div>
+            <div class="metric-col">
+                ${stat.cpu}
+            </div>
 
-<div class="metric-col">
-${stat.memory}
-</div>
+            <div class="metric-col">
+                ${stat.memory}
+            </div>
 
-</div>
-`
+        </div>
+        `
         })
     }
 
     document.getElementById(
         "containerStats"
-    ).innerHTML =
+    ).innerHTML = `
 
-        `
-<div class="metric-header">
+    <div class="metric-header">
 
-<div class="metric-col metric-name">
-CONTAINER
-</div>
+        <div class="metric-col metric-name">
+            CONTAINER
+        </div>
 
-<div class="metric-col">
-CPU
-</div>
+        <div class="metric-col">
+            CPU
+        </div>
 
-<div class="metric-col">
-MEMORY
-</div>
+        <div class="metric-col">
+            MEMORY
+        </div>
 
-</div>
+    </div>
 
-${statsHTML}
+    ${statsHTML}
 `
-
     /* =========================
        SYSTEM INFO
     ========================= */
@@ -569,18 +532,18 @@ ${statsHTML}
 
         `
 OS:
-${safeValue(system?.os)}
+            ${safeValue(system?.os)}
 
-<br><br>
+            < br > <br>
 
-Platform:
-${safeValue(system?.platform)}
+            Platform:
+            ${safeValue(system?.platform)}
 
-<br><br>
+            <br><br>
 
-Host:
-${safeValue(system?.hostname)}
-`
+                Host:
+                ${safeValue(system?.hostname)}
+                `
 
     /* =========================
        PROCESSES
@@ -588,18 +551,14 @@ ${safeValue(system?.hostname)}
 
     document.getElementById(
         "processes"
-    ).innerHTML =
+    ).innerHTML = `
 
-        (processes?.processes || [])
-        .slice(0, 20)
-        .map(p => `
-
-<div class="process-item">
-${p}
-</div>
-
-`)
-        .join("")
+<pre class="process-table">
+${(processes?.processes || [])
+            .slice(0, 20)
+            .join("\n")}
+</pre>
+`
 
     /* =========================
        NETWORK
@@ -610,10 +569,10 @@ ${p}
     ).innerHTML =
 
         `
-<pre>
-${network?.network || "No network data"}
-</pre>
-`
+                <pre>
+                    ${network?.network || "No network data"}
+                </pre>
+                `
 
     /* =========================
        PORTS
@@ -624,15 +583,15 @@ ${network?.network || "No network data"}
     ).innerHTML =
 
         (ports?.ports || [])
-        .slice(0, 20)
-        .map(p => `
+            .slice(0, 20)
+            .map(p => `
 
-<div class="port-item">
-${p}
-</div>
+                <div class="port-item">
+                    ${p}
+                </div>
 
-`)
-        .join("")
+                `)
+            .join("")
 
     /* =========================
        LIVE LOGS
@@ -643,10 +602,10 @@ ${p}
     ).innerHTML =
 
         `
-<pre>
-${logs?.logs || "No logs"}
-</pre>
-`
+                <pre>
+                    ${logs?.logs || "No logs"}
+                </pre>
+                `
 
     /* =========================
        AUDIT LOGS
@@ -657,10 +616,10 @@ ${logs?.logs || "No logs"}
     ).innerHTML =
 
         `
-<pre>
-${auditLogs?.audit || "No audit logs"}
-</pre>
-`
+                <pre>
+                    ${auditLogs?.audit || "No audit logs"}
+                </pre>
+                `
 
     /* =========================
        CPU CHART
@@ -669,12 +628,12 @@ ${auditLogs?.audit || "No audit logs"}
     const cpuLabels =
 
         (cpuHistory || [])
-        .map(item => item.time)
+            .map(item => item.time)
 
     const cpuValues =
 
         (cpuHistory || [])
-        .map(item => item.value)
+            .map(item => item.value)
 
     if (!cpuChart) {
 
@@ -749,12 +708,12 @@ ${auditLogs?.audit || "No audit logs"}
     const ramLabels =
 
         (ramHistory || [])
-        .map(item => item.time)
+            .map(item => item.time)
 
     const ramValues =
 
         (ramHistory || [])
-        .map(item => item.value)
+            .map(item => item.value)
 
     if (!ramChart) {
 
@@ -847,7 +806,7 @@ if (hostSelector) {
 }
 
 /* =========================
-   THEME TOGGLE
+                THEME TOGGLE
 ========================= */
 
 const themeToggle =
@@ -867,14 +826,39 @@ if (themeToggle) {
         }
     )
 }
+window.openLogs = async function (containerName) {
 
-/* =========================
-   START
-========================= */
+    try {
 
+        console.log("Opening logs for:", containerName);
+
+        const response = await fetch(
+            `${currentHost}/api/container-logs/${containerName}`
+        );
+
+        const data = await response.json();
+
+        console.log(data);
+
+        document.getElementById(
+            "logsModal"
+        ).style.display = "block";
+
+        document.getElementById(
+            "containerLogs"
+        ).textContent = data.logs;
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert("Failed to load logs");
+    }
+}
 loadDashboard()
 
-setInterval(
-    loadDashboard,
-    5000
-)
+setInterval(() => {
+
+    loadDashboard()
+
+}, 3000)

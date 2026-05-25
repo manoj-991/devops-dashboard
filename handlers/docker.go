@@ -1,14 +1,22 @@
 package handlers
 
 import (
+	"bytes"
+	"context"
+	"io"
 	"net/http"
 	"os/exec"
 	"strings"
+	
 
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/gin-gonic/gin"
 )
 
 type DockerContainer struct {
+	ID     string `json:"id"`
 	Name   string `json:"name"`
 	Image  string `json:"image"`
 	State  string `json:"state"`
@@ -30,12 +38,11 @@ func GetDockerInfo(c *gin.Context) {
 		"docker",
 		"ps",
 		"-a",
-		"--format",
-		"{{.Names}}|{{.Image}}|{{.State}}|{{.Status}}",
+	"--format",
+"{{.ID}}|{{.Names}}|{{.Image}}|{{.State}}|{{.Status}}",
 	)
 
 	output, err := cmd.Output()
-
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Docker not available",
@@ -51,16 +58,17 @@ func GetDockerInfo(c *gin.Context) {
 
 		parts := strings.Split(line, "|")
 
-		if len(parts) < 4 {
+		if len(parts) < 5{
 			continue
 		}
 
 		containers = append(containers, DockerContainer{
-			Name:   parts[0],
-			Image:  parts[1],
-			State:  parts[2],
-			Status: parts[3],
-		})
+	ID:     parts[0],
+	Name:   parts[1],
+	Image:  parts[2],
+	State:  parts[3],
+	Status: parts[4],
+})
 	}
 
 	c.JSON(http.StatusOK, containers)
@@ -80,7 +88,6 @@ func GetContainerStats(c *gin.Context) {
 	)
 
 	output, err := cmd.Output()
-
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Docker stats failed",
@@ -115,27 +122,59 @@ func GetContainerStats(c *gin.Context) {
 // =========================
 func GetContainerLogs(c *gin.Context) {
 
-	name := c.Param("name")
+	containerID := c.Param("id")
 
-	cmd := exec.Command(
-		"docker",
-		"logs",
-		"--tail",
-		"50",
-		name,
-	)
-
-	output, err := cmd.CombinedOutput()
-
+	cli, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to fetch logs",
+			"error": err.Error(),
 		})
 		return
 	}
 
+	reader, err := cli.ContainerLogs(
+		context.Background(),
+		containerID,
+		container.LogsOptions{
+			ShowStdout: true,
+			ShowStderr: true,
+			Follow:     false,
+			Tail:       "100",
+		},
+	)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	defer reader.Close()
+
+	var buf bytes.Buffer
+
+	_, err = stdcopy.StdCopy(&buf, &buf, reader)
+	if err != nil {
+
+		logs, readErr := io.ReadAll(reader)
+
+		if readErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": readErr.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"logs": string(logs),
+		})
+
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"logs": string(output),
+		"logs": buf.String(),
 	})
 }
 
@@ -226,9 +265,10 @@ func StopContainer(c *gin.Context) {
 	})
 }
 
-	
+// =========================
 // DELETE CONTAINER
 // =========================
+
 
 func DeleteContainer(c *gin.Context) {
 
@@ -241,12 +281,12 @@ func DeleteContainer(c *gin.Context) {
 		name,
 	)
 
-	err := cmd.Run()
+	output, err := cmd.CombinedOutput()
 
 	if err != nil {
 
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Delete failed",
+			"error": string(output),
 		})
 
 		return

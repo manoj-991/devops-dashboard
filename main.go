@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,10 +16,9 @@ func main() {
 
 	router := gin.Default()
 
-	store :=
-		cookie.NewStore(
-			[]byte("secret"),
-		)
+	store := cookie.NewStore(
+		[]byte("secret"),
+	)
 
 	router.Use(
 		sessions.Sessions(
@@ -36,13 +34,19 @@ func main() {
 
 	handlers.StartMetricCollector()
 
+	// ROUTES
 	routes.SetupRoutes(router)
-	handlers.StartMetricCollector()
 
-	router.Run(":9090")
+	router.GET(
+		"/api/container-logs/:id",
+		handlers.GetContainerLogs,
+	)
 
 	router.DELETE(
-	"/api/docker/delete/:name",
-	handlers.DeleteContainer,
-)
+		"/api/container-delete/:name",
+		handlers.DeleteContainer,
+	)
+
+	// START SERVER
+	router.Run(":9090")
 }

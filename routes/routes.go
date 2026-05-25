@@ -93,10 +93,6 @@ func SetupRoutes(router *gin.Engine) {
 	"/container-stats",
 	handlers.GetContainerStats,
 )
-protected.GET(
-	"/container-logs/:name",
-	handlers.GetContainerLogs,
-)
 
 protected.POST(
 	"/container-restart/:name",

@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"sort"
 	"strings"
 	"time"
 
@@ -17,7 +16,6 @@ import (
 	"github.com/shirou/gopsutil/v3/host"
 	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/shirou/gopsutil/v3/net"
-	"github.com/shirou/gopsutil/v3/process"
 )
 
 var startTime = time.Now()
@@ -170,51 +168,29 @@ func GetSystemInfo(c *gin.Context) {
 
 func GetProcesses(c *gin.Context) {
 
-	processes, err := process.Processes()
+	cmd := exec.Command(
+		"tasklist",
+	)
+
+	output, err := cmd.Output()
 
 	if err != nil {
 
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to get processes",
+			"error": "Failed to fetch processes",
 		})
 
 		return
 	}
 
-	var processList []ProcessInfo
+	lines := strings.Split(
+		string(output),
+		"\n",
+	)
 
-	for _, p := range processes {
-
-		name, err := p.Name()
-
-		if err != nil {
-			continue
-		}
-
-		cpuPercent, err := p.CPUPercent()
-
-		if err != nil {
-			continue
-		}
-
-		processList = append(
-			processList,
-			ProcessInfo{
-				Name: name,
-				CPU:  cpuPercent,
-			},
-		)
-	}
-
-	sort.Slice(processList, func(i, j int) bool {
-		return processList[i].CPU > processList[j].CPU
+	c.JSON(http.StatusOK, gin.H{
+		"processes": lines,
 	})
-
-	if len(processList) > 5 {
-		processList = processList[:5]
-	}
-
-	c.JSON(http.StatusOK, processList)
 }
 
 func GetLogs(c *gin.Context) {
