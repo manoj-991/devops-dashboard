@@ -19,11 +19,9 @@ var MetricInterval int
 func LoadConfig() {
 
 	err := godotenv.Load()
-
-	if err != nil {
-
-		log.Fatal("Error loading .env")
-	}
+if err != nil {
+    log.Println("No .env file found")
+}
 
 	Port =
 		os.Getenv("PORT")

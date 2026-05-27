@@ -105,3 +105,9 @@
 [2026-05-26 01:11:32 AM] Container deleted: miles_ranga
 [2026-05-26 01:12:54 AM] Container stopped: miles
 [2026-05-26 01:13:07 AM] Container deleted: miles
+[2026-05-26 12:33:37 PM] Container started: inspiring_borg
+[2026-05-26 12:33:47 PM] Container stopped: notessharing-db-1
+[2026-05-26 12:33:51 PM] Container stopped: inspiring_borg
+[2026-05-26 09:35:28 PM] Container stopped: notessharing-db-1
+[2026-05-26 09:46:11 PM] Container started: notessharing-web-1
+[2026-05-26 09:46:21 PM] Container stopped: notessharing-web-1

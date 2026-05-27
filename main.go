@@ -15,7 +15,11 @@ func main() {
 	config.LoadConfig()
 
 	router := gin.Default()
-
+	
+router.Static("/frontend", "./frontend")
+router.GET("/", func(c *gin.Context) {
+    c.File("./frontend/index.html")
+})
 	store := cookie.NewStore(
 		[]byte("secret"),
 	)
@@ -26,11 +30,7 @@ func main() {
 			store,
 		),
 	)
-
-	router.Static(
-		"/frontend",
-		"./frontend",
-	)
+	
 
 	handlers.StartMetricCollector()
 
