@@ -5,4 +5,3 @@ logs/audit.log
 .github
 helm
 k8s
-README.md
