@@ -1,4 +1,4 @@
-name: DevOps Dashboard CI/CD
+name: DevOps Full Pipeline
 
 on:
   push:
@@ -47,7 +47,7 @@ jobs:
         run: |
           sed -i 's/tag:.*/tag: "${{ github.run_number }}"/g' devops-dashboard-chart/values.yaml
 
-      - name: Commit Updated Helm Tag
+      - name: Commit Updated Helm Values
         run: |
           git config --global user.email "github-actions@github.com"
           git config --global user.name "github-actions"
