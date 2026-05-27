@@ -2,6 +2,6 @@
 logs/*.log
 logs/audit.log
 .git
-.github
+
 helm
 k8s
