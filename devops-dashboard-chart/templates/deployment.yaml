@@ -5,6 +5,9 @@ metadata:
   labels:
     {{- include "devops-dashboard-chart.labels" . | nindent 4 }}
 spec:
+volumeMounts:
+  - name: docker-sock
+    mountPath: /var/run/docker.sock
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
@@ -35,6 +38,10 @@ spec:
       containers:
         - name: {{ .Chart.Name }}
           {{- with .Values.securityContext }}
+          volumes:
+  - name: docker-sock
+    hostPath:
+      path: /var/run/docker.sock
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
