@@ -9,19 +9,19 @@ spec:
 
   selector:
     matchLabels:
-      app: devops-dashboard
+      app.kubernetes.io/name: devops-dashboard-chart
+      app.kubernetes.io/instance: devops-dashboard
 
   template:
     metadata:
       labels:
-        app: devops-dashboard
+        app.kubernetes.io/name: devops-dashboard-chart
+        app.kubernetes.io/instance: devops-dashboard
 
     spec:
       containers:
         - name: devops-dashboard
-
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-
           imagePullPolicy: Always
 
           ports:
