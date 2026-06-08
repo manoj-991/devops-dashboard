@@ -25,7 +25,8 @@ spec:
           imagePullPolicy: Always
 
           ports:
-            - containerPort: 9090
+  - name: http
+    containerPort: 9090
 
           volumeMounts:
             - name: docker-sock
